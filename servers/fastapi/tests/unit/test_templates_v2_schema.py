@@ -139,6 +139,11 @@ def test_extract_slide_schema_from_layout_extracts_editable_content():
                                     "stacked_bar",
                                 ],
                             },
+                            "takeaway": {
+                                "type": "string",
+                                "maxLength": 140,
+                                "description": "One sentence stating what this chart proves, not a restatement of the axis labels.",
+                            },
                             "categories": {
                                 "type": "array",
                                 "items": {"type": "string"},
@@ -162,7 +167,7 @@ def test_extract_slide_schema_from_layout_extracts_editable_content():
                                 "maxItems": 12,
                             },
                         },
-                        "required": ["chart_type", "categories", "series"],
+                        "required": ["chart_type", "takeaway", "categories", "series"],
                     },
                 },
                 "required": ["bullets", "chart"],
@@ -385,6 +390,11 @@ def test_get_component_schema_extracts_generated_component_content():
                             "stacked_bar",
                         ],
                     },
+                    "takeaway": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "description": "One sentence stating what this chart proves, not a restatement of the axis labels.",
+                    },
                     "categories": {
                         "type": "array",
                         "items": {"type": "string"},
@@ -408,7 +418,7 @@ def test_get_component_schema_extracts_generated_component_content():
                         "maxItems": 12,
                     },
                 },
-                "required": ["chart_type", "categories", "series"],
+                "required": ["chart_type", "takeaway", "categories", "series"],
                 "title": "Trend",
                 "x-element-type": "chart",
                 "x-element-path": "elements.3",
@@ -458,7 +468,7 @@ def test_get_component_schema_extracts_infographic_content_without_vector_conten
         "const": "progress_bar"
     }
     assert "colors" not in properties["progress"]["properties"]
-    assert properties["progress"]["required"] == ["data"]
+    assert properties["progress"]["required"] == ["data", "takeaway"]
 
 
 def test_get_component_schema_preserves_vertical_funnel_type_and_item_limits():
