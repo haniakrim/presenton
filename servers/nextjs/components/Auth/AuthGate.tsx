@@ -1,17 +1,17 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { getApiUrl } from "@/utils/api";
 import { isAuthDisabled } from "@/utils/auth";
 import { formatFastApiDetail, UNAUTHORIZED_DETAIL } from "@/utils/authErrors";
 import {
-  PRESENTON_SPLASH_MIN_DURATION_MS,
-  PresentonSplashLoader,
-} from "@/components/ui/presenton-splash-loader";
+  FORGE_SPLASH_MIN_DURATION_MS,
+  ForgeSplashLoader,
+} from "@/components/ui/forge-splash-loader";
 import { notify } from "@/components/ui/sonner";
 import { sanitizeAnalyticsError } from "@/utils/analytics";
 import { MixpanelEvent, trackEvent } from "@/utils/mixpanel";
+import { ForgeMark } from "@/components/ForgeLogo";
 
 type AuthStatus = {
   configured: boolean;
@@ -41,7 +41,7 @@ export default function AuthGate() {
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setHasMetSplashDuration(true);
-    }, PRESENTON_SPLASH_MIN_DURATION_MS);
+    }, FORGE_SPLASH_MIN_DURATION_MS);
 
     return () => window.clearTimeout(timeout);
   }, []);
@@ -328,7 +328,7 @@ export default function AuthGate() {
     status.authenticated ||
     !hasMetSplashDuration
   ) {
-    return <PresentonSplashLoader message="Preparing your workspace..." />;
+    return <ForgeSplashLoader message="Preparing your workspace..." />;
   }
 
   return (
@@ -336,14 +336,8 @@ export default function AuthGate() {
       <section className="relative z-10 w-full max-w-lg rounded-[20px] border border-[#EDEEEF] bg-[#F9F8F8] p-7 sm:p-10">
         <div className="mb-7">
           <div className="flex items-center gap-4">
-            <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-[4px] bg-[#F4F3FF] p-3">
-              <Image
-                src="/logo-with-bg.png"
-                alt=""
-                width={161}
-                height={166}
-                className="h-10 w-auto object-contain"
-              />
+            <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center">
+              <ForgeMark className="h-full w-full" />
             </div>
             <div>
               <p className="font-syne text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A5AF8]">

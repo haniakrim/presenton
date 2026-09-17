@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, Star, Brain, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Star, Brain, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { ForgeMark } from "@/components/ForgeLogo";
 
 
 
@@ -35,8 +36,8 @@ const DashboardSidebar = ({ showTemplates = true }: DashboardSidebarProps) => {
             <div>
 
                 <Link href={`/dashboard`} className="flex items-center  pb-6 border-b border-[#E1E1E5]   gap-2    ">
-                    <div className="bg-[#7C51F8] rounded-full cursor-pointer p-1 flex justify-center items-center mx-auto">
-                        <img src="/logo-with-bg.png" alt="Presenton logo" className="h-[40px] object-contain w-full" />
+                    <div className="cursor-pointer flex justify-center items-center mx-auto">
+                        <ForgeMark className="h-[40px] w-[40px]" />
                     </div>
                 </Link>
                 <nav className="pt-6 font-syne" aria-label="Dashboard sections">
@@ -97,15 +98,6 @@ const DashboardSidebar = ({ showTemplates = true }: DashboardSidebarProps) => {
                 >
                     <Settings className="h-4 w-4" />
                     <span className="text-[11px] text-slate-800">Settings</span>
-                </Link>
-                <div className="py-2"/>
-                <Link
-                    href="https://docs.presenton.ai/help"
-                    target="_blank"
-                    className="flex flex-col items-center gap-2 transition-colors"
-                >
-                    <HelpCircle className="h-4 w-4" />
-                    <span className="text-[11px] text-slate-800">Help</span>
                 </Link>
             </div>
 

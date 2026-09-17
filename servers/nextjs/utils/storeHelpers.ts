@@ -383,7 +383,7 @@ export function syncStoreAfterCodexSignOut(): void {
   );
 }
 
-/** Clear the stale cloud selection immediately after Presenton is disconnected. */
+/** Clear the stale cloud selection immediately after Forge is disconnected. */
 export function syncStoreAfterPresentonDisconnect(): void {
   const prev = store.getState().userConfig.llm_config;
   store.dispatch(

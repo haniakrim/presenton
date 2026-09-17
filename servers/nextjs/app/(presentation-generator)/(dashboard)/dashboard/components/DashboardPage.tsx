@@ -26,15 +26,10 @@ import { notify } from "@/components/ui/sonner";
 import { sanitizeAnalyticsError } from "@/utils/analytics";
 import { IMAGE_PROVIDERS, LLM_PROVIDERS } from "@/utils/providerConstants";
 
-const GITHUB_REPOSITORY_URL = "https://github.com/presenton/presenton";
-const DISCORD_INVITE_URL = "https://discord.com/invite/9ZsKKxudNE";
 const APP_UPDATE_URL = "https://presenton.ai/download";
 
 const actionCardBase =
   "absolute aspect-[16/9] h-[46.238px] w-[82.201px] rounded-[4.474px] border border-white/50 bg-cover bg-center bg-no-repeat shadow-[0_8px_18px_rgba(16,24,40,0.18)] transition-all duration-500 ease-out opacity-100 translate-y-0 scale-100";
-
-const dashboardHeaderPill =
-  "inline-flex shrink-0 items-center justify-center rounded-full text-[#191919] transition-colors hover:bg-[#F8F8FA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A5AF8] focus-visible:ring-offset-2";
 
 const dashboardHeaderAsset = (name: string) => `/dashboard-header/${name}`;
 const dashboardBodyAsset = (name: string) => `/dashboard-body/${name}`;
@@ -254,106 +249,13 @@ function DashboardHeader() {
 
       <div className="max-w-full overflow-x-auto hide-scrollbar lg:overflow-visible">
         <div className="flex h-[42.24px] w-max max-w-none items-center gap-3 rounded-full pl-3">
-          <div className="flex h-[42.24px] items-center gap-[18px] rounded-[32px] border border-[#EDEEEF] bg-white px-3 py-1">
-            <Link
-              href="/settings"
-              className={`${dashboardHeaderPill} h-[26.1px] gap-1.5 p-1.5`}
-              onClick={() =>
-                trackEvent(MixpanelEvent.Navigation, {
-                  from: pathname,
-                  to: "/settings",
-                  source: "dashboard_header_settings",
-                })
-              }
-            >
-              <span
-                className="flex h-[34.1px] shrink-0 items-center"
-                title={configuredProviders
-                  .map((provider) => provider.label)
-                  .join(" + ")}
-              >
-                {configuredProviders.map((provider, index) => (
-                  <span
-                    key={`${provider.value}-${index}`}
-                    className={`relative h-[22px] w-[22px] shrink-0 overflow-hidden rounded-full border-[1.238px] border-[#EDEEEF] bg-white ${
-                      index > 0 ? "-ml-[4.4px]" : "z-10"
-                    }`}
-                  >
-                    <Image
-                      src={provider.icon!}
-                      alt=""
-                      aria-hidden="true"
-                      width={224}
-                      height={224}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  </span>
-                ))}
-              </span>
-              <span className="font-syne text-sm font-medium leading-[17.6px] tracking-[0.56px]">
-                Settings
-              </span>
-            </Link>
-
-            <DashboardHeaderDivider />
-
-            <Link
-              href={DISCORD_INVITE_URL}
-              target="_blank"
-              rel="noreferrer"
-              className={`${dashboardHeaderPill} h-[29.6px] gap-[8.8px] p-1.5`}
-              onClick={() =>
-                trackEvent(MixpanelEvent.Navigation, {
-                  from: pathname,
-                  to: DISCORD_INVITE_URL,
-                  source: "dashboard_header_discord",
-                })
-              }
-            >
-              <Image
-                src={dashboardHeaderAsset("discord.svg")}
-                alt=""
-                aria-hidden="true"
-                width={18}
-                height={18}
-                className="h-[17.6px] w-[17.6px] shrink-0"
-              />
-              <span className="font-syne text-sm font-normal leading-normal tracking-[-0.14px] text-[#191919]">
-                Join Discord
-              </span>
-            </Link>
-            <DashboardHeaderDivider />
-            <Link
-              href={GITHUB_REPOSITORY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className={`${dashboardHeaderPill} h-[29.6px] gap-[8.8px] p-1.5`}
-              onClick={() =>
-                trackEvent(MixpanelEvent.Navigation, {
-                  from: pathname,
-                  to: GITHUB_REPOSITORY_URL,
-                  source: "dashboard_header_github",
-                })
-              }
-            >
-              <Image
-                src={dashboardHeaderAsset("github.svg")}
-                alt=""
-                aria-hidden="true"
-                width={18}
-                height={18}
-                className="h-[17.6px] w-[17.6px] shrink-0"
-              />
-            </Link>
-          </div>
-
           {isElectronApp && (
             <Link
               href={APP_UPDATE_URL}
               target="_blank"
               rel="noreferrer"
-              aria-label="Update Presenton"
-              title="Update Presenton"
+              aria-label="Update Forge"
+              title="Update Forge"
               className="relative flex h-[42.24px] w-[42.24px] shrink-0 items-center justify-center rounded-full border-[1.32px] border-[#D9D6FE] bg-[#FAFAFF] transition-colors hover:bg-[#F3F0FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A5AF8] focus-visible:ring-offset-2"
               onClick={() =>
                 trackEvent(MixpanelEvent.Navigation, {

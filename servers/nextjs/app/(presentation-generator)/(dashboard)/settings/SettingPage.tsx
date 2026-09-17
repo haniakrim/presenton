@@ -179,8 +179,8 @@ const SettingsPage = () => {
       const isConnected = await checkPresentonAuthStatus();
       if (!isConnected) {
         notify.warning(
-          "Connect Presenton first",
-          "Sign in to Presenton Cloud before selecting it as the text provider."
+          "Connect Forge first",
+          "Sign in to Forge Cloud before selecting it as the text provider."
         );
         setSelectedProvider("text-provider");
         return;
@@ -441,7 +441,7 @@ const SettingsPage = () => {
             >
               <p className="text-sm font-semibold">Choose a text provider to continue</p>
               <p className="mt-1 text-xs leading-5">
-                Presenton Cloud is disconnected. Select any text provider below and save the configuration before opening another page.
+                Forge Cloud is disconnected. Select any text provider below and save the configuration before opening another page.
               </p>
             </div>
           )}

@@ -5,7 +5,7 @@ import { getServerAuthStatus } from '@/utils/serverAuth'
 import { getSettingsView } from '@/utils/settingsAccess'
 
 export const metadata = {
-  title: 'Settings | Presenton',
+  title: 'Settings | Forge',
   description: 'Settings page',
 }
 const page = async () => {

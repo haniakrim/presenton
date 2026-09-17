@@ -125,7 +125,7 @@ export default function OnboardingPresentonAccount({
     approvalWindowRef.current = approvalWindow;
     if (approvalWindow) {
       approvalWindow.opener = null;
-      approvalWindow.document.title = "Connecting to Presenton…";
+      approvalWindow.document.title = "Connecting to Forge…";
     }
 
     try {
@@ -138,15 +138,15 @@ export default function OnboardingPresentonAccount({
           body: JSON.stringify({
             device_name:
               variant === "settings"
-                ? "Presenton settings"
-                : "Presenton onboarding",
+                ? "Forge settings"
+                : "Forge onboarding",
           }),
         },
       );
       const payload: unknown = await response.json().catch(() => ({}));
       if (!response.ok || !payload || typeof payload !== "object") {
         throw new Error(
-          getErrorMessage(payload, "Could not start Presenton authorization."),
+          getErrorMessage(payload, "Could not start Forge authorization."),
         );
       }
 
@@ -174,7 +174,7 @@ export default function OnboardingPresentonAccount({
     } catch (error) {
       approvalWindow?.close();
       notify.error(
-        "Could not connect Presenton",
+        "Could not connect Forge",
         error instanceof Error ? error.message : "Please try again.",
       );
     } finally {
@@ -200,7 +200,7 @@ export default function OnboardingPresentonAccount({
       const payload: unknown = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(
-          getErrorMessage(payload, "Could not disconnect Presenton."),
+          getErrorMessage(payload, "Could not disconnect Forge."),
         );
       }
 
@@ -215,7 +215,7 @@ export default function OnboardingPresentonAccount({
       await loadStatus();
       await onDisconnect?.();
       notify.success(
-        "Presenton Cloud disconnected",
+        "Forge Cloud disconnected",
         variant === "settings"
           ? "Choose a text provider and save the configuration to continue."
           : "The global provider has been disconnected from this workspace.",
@@ -225,7 +225,7 @@ export default function OnboardingPresentonAccount({
         "Sign-out failed",
         error instanceof Error
           ? error.message
-          : "Could not disconnect from Presenton. Please try again.",
+          : "Could not disconnect from Forge. Please try again.",
       );
     } finally {
       setIsLoggingOut(false);
@@ -236,7 +236,7 @@ export default function OnboardingPresentonAccount({
     if (!flow) return;
     try {
       await navigator.clipboard.writeText(flow.userCode);
-      notify.success("Code copied", "Paste it in the Presenton approval page.");
+      notify.success("Code copied", "Paste it in the Forge approval page.");
     } catch {
       notify.error("Could not copy code", "Select and copy the code manually.");
     }
@@ -250,7 +250,7 @@ export default function OnboardingPresentonAccount({
         setFlow(null);
         notify.error(
           "Authorization expired",
-          "Start again to connect your Presenton account.",
+          "Start again to connect your Forge account.",
         );
         return;
       }
@@ -282,7 +282,7 @@ export default function OnboardingPresentonAccount({
         }
         if (!response.ok) {
           throw new Error(
-            getErrorMessage(payload, "Could not connect Presenton Cloud."),
+            getErrorMessage(payload, "Could not connect Forge Cloud."),
           );
         }
 
@@ -297,8 +297,8 @@ export default function OnboardingPresentonAccount({
         approvalWindowRef.current = null;
         await loadStatus();
         notify.success(
-          "Presenton Cloud connected",
-          "Presenton is now available as a workspace provider.",
+          "Forge Cloud connected",
+          "Forge is now available as a workspace provider.",
         );
         if (variant === "onboarding") {
           await onContinueRef.current?.();
@@ -306,7 +306,7 @@ export default function OnboardingPresentonAccount({
       } catch (error) {
         setFlow(null);
         notify.error(
-          "Presenton connection failed",
+          "Forge connection failed",
           error instanceof Error ? error.message : "Please try again.",
         );
       }
@@ -318,7 +318,7 @@ export default function OnboardingPresentonAccount({
   if (isLoading) {
     return (
       <section
-        aria-label="Loading Presenton account connection"
+        aria-label="Loading Forge account connection"
         className="h-[82px] animate-pulse rounded-[12px] border border-[#EDEEEF] bg-[#FAFAFC]"
       />
     );
@@ -326,7 +326,7 @@ export default function OnboardingPresentonAccount({
 
   return (
       <section
-        aria-label="Presenton Cloud connection"
+        aria-label="Forge Cloud connection"
         className="relative isolate font-syne"
       >
         <div className="relative z-10 overflow-hidden rounded-[12px] border border-[#EDEEEF] bg-white">
@@ -345,7 +345,7 @@ export default function OnboardingPresentonAccount({
             }`}
           >
             <Image
-              src="/providers/presenton.png"
+              src="/providers/forge.png"
               alt=""
               width={39}
               height={39}
@@ -354,7 +354,7 @@ export default function OnboardingPresentonAccount({
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
                 <span className="text-[16px] font-medium leading-normal tracking-[-0.32px] text-[#191919]">
-                  Presenton Cloud
+                  Forge Cloud
                 </span>
                 {status.linked ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#E9F8EF] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-[#238553]">
@@ -364,10 +364,10 @@ export default function OnboardingPresentonAccount({
               </span>
               <span className="mt-0.5 block truncate text-[14px] font-normal leading-normal text-[#4C4C4C]">
                 {status.linked
-                  ? status.email || "Presenton Cloud is ready for this workspace."
+                  ? status.email || "Forge Cloud is ready for this workspace."
                   : status.canManage
-                    ? "Use Presenton as provider for AI Presentations"
-                    : "A workspace administrator must connect Presenton Cloud."}
+                    ? "Use Forge as provider for AI Presentations"
+                    : "A workspace administrator must connect Forge Cloud."}
               </span>
             </span>
             {isStarting ? (
@@ -382,8 +382,8 @@ export default function OnboardingPresentonAccount({
               type="button"
               onClick={() => void signOut()}
               disabled={isLoggingOut}
-              title="Disconnect Presenton Cloud"
-              aria-label="Disconnect Presenton Cloud"
+              title="Disconnect Forge Cloud"
+              aria-label="Disconnect Forge Cloud"
               className="absolute right-5 top-1/2 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#EDEEEF] bg-white text-[#4C4C4C] shadow-[0_3px_10px_rgba(16,24,40,0.04)] transition hover:border-[#DDD9E8] hover:bg-[#F7F6F9] disabled:opacity-50"
             >
               {isLoggingOut ? (
@@ -402,7 +402,7 @@ export default function OnboardingPresentonAccount({
                   onClick={() => void onContinue()}
                   className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#7C51F8] px-4 text-[11px] font-semibold text-white transition hover:bg-[#6D46E6]"
                 >
-                  Continue with Presenton
+                  Continue with Forge
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               ) : (
@@ -413,8 +413,8 @@ export default function OnboardingPresentonAccount({
                   type="button"
                   onClick={() => void signOut()}
                   disabled={isLoggingOut}
-                  title="Disconnect Presenton Cloud"
-                  aria-label="Disconnect Presenton Cloud"
+                  title="Disconnect Forge Cloud"
+                  aria-label="Disconnect Forge Cloud"
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#EDEEEF] text-[#4C4C4C] transition hover:bg-[#F7F6F9] disabled:opacity-50"
                 >
                   {isLoggingOut ? (
@@ -432,7 +432,7 @@ export default function OnboardingPresentonAccount({
           <div className="relative z-0 -mt-[10px] rounded-b-[12px] border border-[#EDEEEF] bg-white px-5 pb-5 pt-[30px]">
             <div className="flex items-end justify-between gap-3">
               <p className="min-w-0 truncate font-manrope text-[14px] font-normal leading-normal tracking-[-0.14px] text-[#333333]">
-                Approve this code in the Presenton window
+                Approve this code in the Forge window
               </p>
               <a
                 href={flow.verificationUri}

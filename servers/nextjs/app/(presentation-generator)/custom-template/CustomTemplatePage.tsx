@@ -24,6 +24,7 @@ import {
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
+import { ForgeMark } from "@/components/ForgeLogo";
 import {
   Command,
   CommandEmpty,
@@ -116,12 +117,7 @@ function StudioTopBar({ activeStep }: { activeStep: StudioStep }) {
           className="pointer-events-auto block h-8 w-8 sm:h-[34px] sm:w-[34px] 2xl:h-[44px] 2xl:w-[44px] shrink-0"
           aria-label="Dashboard"
         >
-          <img
-            src="/logo-with-bg.png"
-            alt="Presenton"
-            className="h-full w-full"
-            draggable={false}
-          />
+          <ForgeMark className="h-full w-full" />
         </a>
 
         <nav
@@ -379,7 +375,7 @@ function UploadPanel({
             i
           </span>
           <p>
-            Presenton sends each slide as a screenshot and HTML reference. Use a
+            Forge sends each slide as a screenshot and HTML reference. Use a
             vision-enabled model for accurate layouts. Text-only models may produce
             poor results or fail.
           </p>

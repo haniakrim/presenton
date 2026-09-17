@@ -760,15 +760,15 @@ thead {
   }
 }
 
-.presenton-splash-surface {
+.forge-splash-surface {
   transform-origin: center center;
 }
 
-.presenton-splash-wordmark-layer {
+.forge-splash-wordmark-layer {
   display: block;
 }
 
-@keyframes presenton-splash-surface-grow {
+@keyframes forge-splash-surface-grow {
   0% {
     transform: translate3d(-50%, -50%, 0) scale(0.001);
   }
@@ -778,7 +778,7 @@ thead {
   }
 }
 
-@keyframes presenton-splash-text-reveal {
+@keyframes forge-splash-text-reveal {
   0% {
     clip-path: circle(0 at 50% 50%);
   }
@@ -799,12 +799,12 @@ thead {
     animation: none;
   }
 
-  .presenton-splash-surface {
+  .forge-splash-surface {
     animation: none !important;
     transform: translate3d(-50%, -50%, 0) scale(1);
   }
 
-  .presenton-splash-wordmark-reveal {
+  .forge-splash-wordmark-reveal {
     animation: none !important;
     clip-path: circle(71vmax at 50% 50%);
   }

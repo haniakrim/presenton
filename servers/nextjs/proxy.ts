@@ -142,7 +142,7 @@ export async function proxy(request: NextRequest) {
     return isFastApiApiPath(pathname)
       ? rewriteToFastApi(request)
       : NextResponse.json(
-          { detail: "API keys are only accepted by the Presenton API" },
+          { detail: "API keys are only accepted by the Forge API" },
           { status: 403 }
         );
   }

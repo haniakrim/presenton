@@ -308,7 +308,7 @@ export function resolveBackendAssetUrl(path?: string): string {
   if (isAbsoluteHttpUrl(trimmedPath)) {
     try {
       const parsed = new URL(trimmedPath);
-      // Assets returned by Presenton cloud (or any other remote origin) must
+      // Assets returned by Forge cloud (or any other remote origin) must
       // retain their complete URL. Only URLs that point at this deployment's
       // own backend are normalized to the runtime's local/reverse-proxy path.
       if (!isLocalBackendOrigin(parsed.origin)) {

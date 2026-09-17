@@ -60,7 +60,7 @@ export const PresentationCard = ({
     if (isUnsupported) {
       notify.warning(
         "Unsupported presentation",
-        "This deck was created in an older Presenton version. Downgrade to a compatible version to open it."
+        "This deck was created in an older Forge version. Downgrade to a compatible version to open it."
       );
       return;
     }
@@ -130,7 +130,7 @@ export const PresentationCard = ({
         suppressHydrationWarning={true}
         onClick={handlePreview}
         aria-disabled={isUnsupported}
-        title={isUnsupported ? "Unsupported in this version of Presenton" : undefined}
+        title={isUnsupported ? "Unsupported in this version of Forge" : undefined}
         className={`bg-[#F8FBFB] font-syne relative shadow-none sm:shadow-none presentation-card rounded-[12px] p-0 group transition-all duration-500 slide-theme overflow-hidden flex flex-col ${
           isUnsupported
             ? "cursor-not-allowed border-[#EDEEEF]"

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { ForgeMark } from "@/components/ForgeLogo";
 
 interface OutlineStandardHeaderProps {
   title: string;
@@ -21,13 +21,7 @@ const OutlineStandardHeader = ({
           aria-label="Go to dashboard"
           className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A5AF8]/30"
         >
-          <Image
-            src="/logo-with-bg.png"
-            alt=""
-            width={32}
-            height={33}
-            className="h-[33px] w-[32px]"
-          />
+          <ForgeMark className="h-[33px] w-[32px]" />
         </Link>
         <h1 className="truncate text-base font-medium tracking-[0.16px] text-[#101323]">
           {title}

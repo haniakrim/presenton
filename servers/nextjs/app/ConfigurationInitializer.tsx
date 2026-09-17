@@ -14,7 +14,7 @@ import {
   isBackendConnectionError,
 } from '@/utils/api';
 import { notify } from '@/components/ui/sonner';
-import { PRESENTON_SPLASH_MIN_DURATION_MS } from '@/components/ui/presenton-splash-loader';
+import { FORGE_SPLASH_MIN_DURATION_MS } from '@/components/ui/forge-splash-loader';
 
 function ConfigurationLoadingScreen() {
   return (
@@ -26,7 +26,7 @@ function ConfigurationLoadingScreen() {
       <div className="flex flex-col items-center gap-7 whitespace-nowrap text-center">
         <div aria-hidden="true" className="configuration-loader" />
         <p className="font-syne text-[18px] font-normal leading-normal tracking-[-0.54px] text-[#191919]">
-          Loading Presenton...
+          Loading Forge...
         </p>
       </div>
 
@@ -68,7 +68,7 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
   // Fetch user config state
   useEffect(() => {
     fetchUserConfigState();
-    // Configuration bootstrap runs once. Presenton is revalidated separately
+    // Configuration bootstrap runs once. Forge is revalidated separately
     // below whenever the user navigates to another application route.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -130,7 +130,7 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
         );
         if (!statusResponse.ok) {
           await assertBackendReachable();
-          throw new Error(`Presenton status returned ${statusResponse.status}`);
+          throw new Error(`Forge status returned ${statusResponse.status}`);
         }
         const status = await statusResponse.json() as { linked?: boolean };
 
@@ -138,7 +138,7 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
           dispatch(setLLMConfig({ ...config, LLM: '' }));
           notify.warning(
             "Provider setup required",
-            "Presenton Cloud is disconnected. Choose a text provider to continue.",
+            "Forge Cloud is disconnected. Choose a text provider to continue.",
             { id: "provider-setup-required" }
           );
           router.replace('/');
@@ -153,9 +153,9 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
           );
         } else if (!cancelled && selectedProvider === 'presenton') {
           notify.error(
-            "Could not verify Presenton Cloud",
+            "Could not verify Forge Cloud",
             "Your current page has been kept open. Try again after checking the backend service.",
-            { id: "presenton-status-unavailable" }
+            { id: "forge-status-unavailable" }
           );
         } else if (!cancelled) {
           notify.error(
@@ -181,7 +181,7 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
 
     const timeout = window.setTimeout(() => {
       setHasMetSplashDuration(true);
-    }, PRESENTON_SPLASH_MIN_DURATION_MS);
+    }, FORGE_SPLASH_MIN_DURATION_MS);
 
     return () => window.clearTimeout(timeout);
   }, [shouldShowStartupSplash]);
@@ -268,19 +268,19 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
           );
           if (!response.ok) {
             await assertBackendReachable();
-            throw new Error(`Presenton status returned ${response.status}`);
+            throw new Error(`Forge status returned ${response.status}`);
           }
           const status = await response.json();
           hasPresentonCloud = Boolean(status.linked);
         } catch (error) {
-          console.error('Failed to fetch Presenton cloud status:', error);
+          console.error('Failed to fetch Forge cloud status:', error);
           const backendUnavailable = isBackendConnectionError(error);
           notify.error(
-            backendUnavailable ? "Cannot reach backend" : "Could not verify Presenton Cloud",
+            backendUnavailable ? "Cannot reach backend" : "Could not verify Forge Cloud",
             backendUnavailable
               ? error.message
               : "Your current page has been kept open. Refresh after checking the backend service.",
-            { id: backendUnavailable ? "backend-unreachable" : "presenton-status-unavailable" }
+            { id: backendUnavailable ? "backend-unreachable" : "forge-status-unavailable" }
           );
           setIsLoading(false);
           return;

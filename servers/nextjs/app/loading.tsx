@@ -1,5 +1,5 @@
-import { PresentonSplashLoader } from "@/components/ui/presenton-splash-loader";
+import { ForgeSplashLoader } from "@/components/ui/forge-splash-loader";
 
 export default function Loading() {
-  return <PresentonSplashLoader message="Preparing your workspace..." />;
+  return <ForgeSplashLoader message="Preparing your workspace..." />;
 }

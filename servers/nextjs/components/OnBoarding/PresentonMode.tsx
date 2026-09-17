@@ -902,8 +902,8 @@ const PresentonMode = ({
                 : null;
             if (!statusPayload?.linked) {
                 notify.warning(
-                    "Connect Presenton first",
-                    "Sign in to Presenton Cloud before continuing."
+                    "Connect Forge first",
+                    "Sign in to Forge Cloud before continuing."
                 );
                 return;
             }
@@ -921,7 +921,7 @@ const PresentonMode = ({
             router.push('/upload');
         } catch (error) {
             notify.error(
-                "Could not select Presenton",
+                "Could not select Forge",
                 error instanceof Error ? error.message : "Please try again."
             );
         } finally {
@@ -948,7 +948,7 @@ const PresentonMode = ({
                 <div className="space-y-4">
                     {selectedWebProvider.value === "auto" && (
                         <div className="rounded-lg border border-[#D9D6FE] bg-[#F4F3FF] p-3 text-xs leading-5 text-[#5146E5]">
-                            Presenton will use model-native web grounding when available. If the selected text model does not support it, web search stays off until you choose an external provider.
+                            Forge will use model-native web grounding when available. If the selected text model does not support it, web search stays off until you choose an external provider.
                         </div>
                     )}
 
@@ -1091,7 +1091,7 @@ const PresentonMode = ({
 
     return (
         <div className='w-full max-w-[660px] font-syne pb-10'>
-            <p className='px-2.5 py-0.5 w-fit text-[#7A5AF8] rounded-[50px]  border border-[#EDEEEF] text-[10px] font-medium mb-5 font-syne'>PRESENTON</p>
+            <p className='px-2.5 py-0.5 w-fit text-[#7A5AF8] rounded-[50px]  border border-[#EDEEEF] text-[10px] font-medium mb-5 font-syne'>FORGE</p>
             <div className=''>
 
                 <h2 className='mb-4 text-black text-[26px] font-normal font-syne '>
@@ -1099,9 +1099,9 @@ const PresentonMode = ({
                 </h2>
                 <p className='text-[#000000CC] text-xl font-normal font-syne'>
                     {providerStep === 1
-                        ? "Use your Presenton account, or configure your own AI providers."
+                        ? "Use your Forge account, or configure your own AI providers."
                         : providerStep === 2
-                            ? "Choose how Presenton creates visuals, or continue without image generation."
+                            ? "Choose how Forge creates visuals, or continue without image generation."
                             : "Add current web context to presentations, or continue with web search disabled."}
                 </p>
             </div>
@@ -1765,7 +1765,7 @@ const PresentonMode = ({
                     className='border font-syne border-[#EDEEEF] bg-[#7C51F8]  rounded-[58px] px-5 py-2.5 text-white text-xs  font-semibold'>
                     {providerStep === 1
                         ? llmConfig.LLM === "presenton"
-                            ? "Continue with Presenton"
+                            ? "Continue with Forge"
                             : "Continue to image provider"
                         : providerStep === 2
                             ? llmConfig.DISABLE_IMAGE_GENERATION ? "Disable image generation & Continue" : "Continue to web search"
