@@ -2420,6 +2420,18 @@ async def stream_presentation(
         for slide in slides:
             slide.ui = _apply_template_content_to_ui(slide.ui, slide.content)
 
+        # Generation can take minutes; the presentation may have been deleted
+        # (e.g. from another tab) while this ran. Re-check before writing so a
+        # stale delete surfaces as a clean stream error instead of an
+        # IntegrityError from inserting slides against a gone presentation.
+        current_presentation = await sql_session.get(PresentationModel, id)
+        if current_presentation is None:
+            yield SSEErrorResponse(
+                detail="This presentation was deleted. Please try again."
+            ).to_string()
+            return
+        presentation = current_presentation
+
         # Moved this here to make sure new slides are generated before deleting the old ones
         await sql_session.execute(
             delete(SlideModel).where(

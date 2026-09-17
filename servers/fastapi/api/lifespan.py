@@ -17,6 +17,7 @@ from utils.model_availability import (
     check_llm_and_image_provider_api_or_model_availability,
 )
 from utils.user_config import update_env_with_user_config
+from utils.llmai_json_fence_patch import apply as apply_llmai_json_fence_patch
 from api.v1.auth.bootstrap import bootstrap_database_admin
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ async def app_lifespan(_: FastAPI):
     availability.
     """
     _configure_application_logging()
+    apply_llmai_json_fence_patch()
     os.makedirs(get_app_data_directory_env(), exist_ok=True)
     await migrate_database_on_startup()
     await create_db_and_tables()
