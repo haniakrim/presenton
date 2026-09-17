@@ -1313,7 +1313,9 @@ def _infographic_text_item_schema(*, hierarchy: bool = False) -> dict[str, Any]:
 
 
 def _infographic_data_content_schema(infographic_type: str) -> dict[str, Any]:
-    properties: dict[str, Any] = {"type": {"const": infographic_type}}
+    properties: dict[str, Any] = {
+        "type": {"type": "string", "const": infographic_type}
+    }
     required = ["type"]
 
     if infographic_type in {"progress_bar", "gauge"}:
