@@ -1285,10 +1285,10 @@ def _infographic_text_item_schema(*, hierarchy: bool = False) -> dict[str, Any]:
     properties: dict[str, Any] = {
         "heading": {"type": "string"},
         "description": {"type": "string"},
-        "label": {"type": "string"},
-        "focus": {"type": "string"},
+        "label": {"type": ["string", "null"]},
+        "focus": {"type": ["string", "null"]},
         "icon": {
-            "type": "object",
+            "type": ["object", "null"],
             "additionalProperties": False,
             "properties": {
                 "url": {"type": "string"},
@@ -1304,11 +1304,15 @@ def _infographic_text_item_schema(*, hierarchy: bool = False) -> dict[str, Any]:
                 "parent_id": {"type": ["string", "null"]},
             }
         )
+    # OpenAI's strict json_schema mode requires every key in `properties` to
+    # also appear in `required` (optional fields are expressed via a nullable
+    # type, not omission) - see _infographic_data_content_schema callers that
+    # extend `properties` after calling this and must extend `required` too.
     return {
         "type": "object",
         "additionalProperties": False,
         "properties": properties,
-        **({"required": ["id", "heading"]} if hierarchy else {}),
+        "required": list(properties),
     }
 
 
@@ -1383,7 +1387,7 @@ def _infographic_data_content_schema(infographic_type: str) -> dict[str, Any]:
             "type": "array",
             "items": {"type": "string"},
         }
-        item_schema["required"] = ["heading", "values"]
+        item_schema["required"] = list(item_schema["properties"])
         properties.update(
             {
                 "criteria": {
@@ -1400,12 +1404,13 @@ def _infographic_data_content_schema(infographic_type: str) -> dict[str, Any]:
         item_schema = _infographic_text_item_schema(hierarchy=hierarchy)
         if infographic_type in {"conversion_funnel", "vertical_funnel"}:
             item_schema["properties"]["value"] = {"type": "number"}
-            item_schema["required"] = ["value", "heading"]
+            item_schema["required"] = list(item_schema["properties"])
         if infographic_type == "mind_map":
             item_schema["properties"]["items"] = {
                 "type": "array",
                 "items": _infographic_text_item_schema(),
             }
+            item_schema["required"] = list(item_schema["properties"])
         properties["items"] = {
             "type": "array",
             "minItems": 1,
@@ -1434,8 +1439,10 @@ def _infographic_data_content_schema(infographic_type: str) -> dict[str, Any]:
             required.append(field_name)
         if infographic_type == "radial_cycle":
             properties["center_image"] = {"type": ["string", "null"]}
+            required.append("center_image")
         if infographic_type == "customer_journey":
             properties["start_color"] = {"type": ["string", "null"]}
+            required.append("start_color")
 
     return {
         "type": "object",
