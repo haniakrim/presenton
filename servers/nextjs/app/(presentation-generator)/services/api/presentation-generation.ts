@@ -20,6 +20,27 @@ export type BlankPresentationResponse = {
   slides: Array<Record<string, unknown>>;
 };
 
+export type SkyworkTaskData = {
+  phase?: string;
+  progress?: number;
+  message?: string;
+  title?: string;
+  filename?: string;
+  path?: string;
+  download_url?: string;
+  presentation_id?: string | null;
+  editable?: boolean;
+};
+
+export type GenerationTaskStatus = {
+  id: string;
+  type: string;
+  status: "pending" | "completed" | "error";
+  message?: string | null;
+  error?: { status_code?: number; detail?: string } | null;
+  data?: SkyworkTaskData | null;
+};
+
 export class PresentationGenerationApi {
   static async uploadDoc(documents: File[]) {
     const formData = new FormData();
@@ -138,6 +159,57 @@ export class PresentationGenerationApi {
       console.error("error in presentation creation", error);
       throw error;
     }
+  }
+
+  static async startSkyworkGeneration({
+    content,
+    language,
+    n_slides,
+    file_paths,
+  }: {
+    content: string;
+    language: string | null;
+    n_slides?: number | null;
+    file_paths?: string[];
+  }): Promise<GenerationTaskStatus | null> {
+    const response = await fetch(getApiUrl(`/api/v1/ppt/skywork/generate`), {
+      method: "POST",
+      headers: getHeader(),
+      body: JSON.stringify({
+        content,
+        language: language ?? "English",
+        n_slides: n_slides ?? null,
+        file_paths,
+      }),
+      cache: "no-cache",
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    return ApiResponseHandler.handleResponse(
+      response,
+      "Failed to start Skywork generation"
+    );
+  }
+
+  static async getGenerationTaskStatus(
+    taskId: string
+  ): Promise<GenerationTaskStatus> {
+    const response = await fetch(
+      getApiUrl(`/api/v1/ppt/presentation/status/${taskId}`),
+      {
+        method: "GET",
+        headers: getHeader(),
+        cache: "no-cache",
+      }
+    );
+
+    return ApiResponseHandler.handleResponse(
+      response,
+      "Failed to fetch generation status"
+    );
   }
 
   static async createBlankPresentation(): Promise<BlankPresentationResponse> {

@@ -126,6 +126,7 @@ services:
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
       - AUTH_OVERRIDE_FROM_ENV=${AUTH_OVERRIDE_FROM_ENV:-}
       - RESET_AUTH=${RESET_AUTH:-}
+      - SKYWORK_API_KEY=${SKYWORK_API_KEY:-}
 
   production-gpu:
     platform: ${PRESENTON_DOCKER_PLATFORM:-linux/amd64}
@@ -260,6 +261,7 @@ services:
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
       - AUTH_OVERRIDE_FROM_ENV=${AUTH_OVERRIDE_FROM_ENV:-}
       - RESET_AUTH=${RESET_AUTH:-}
+      - SKYWORK_API_KEY=${SKYWORK_API_KEY:-}
 
   development:
     platform: ${PRESENTON_DOCKER_PLATFORM:-linux/amd64}
@@ -391,6 +393,7 @@ services:
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
       - AUTH_OVERRIDE_FROM_ENV=${AUTH_OVERRIDE_FROM_ENV:-}
       - RESET_AUTH=${RESET_AUTH:-}
+      - SKYWORK_API_KEY=${SKYWORK_API_KEY:-}
 
   development-gpu:
     platform: ${PRESENTON_DOCKER_PLATFORM:-linux/amd64}
@@ -527,6 +530,7 @@ services:
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
       - AUTH_OVERRIDE_FROM_ENV=${AUTH_OVERRIDE_FROM_ENV:-}
       - RESET_AUTH=${RESET_AUTH:-}
+      - SKYWORK_API_KEY=${SKYWORK_API_KEY:-}
 
 volumes:
   presenton_root_node_modules:

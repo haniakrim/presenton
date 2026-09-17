@@ -297,6 +297,10 @@ def get_custom_llm_api_key_env():
     return os.getenv("CUSTOM_LLM_API_KEY")
 
 
+def get_skywork_api_key_env():
+    return os.getenv("SKYWORK_API_KEY")
+
+
 def get_ollama_model_env():
     return os.getenv("OLLAMA_MODEL")
 

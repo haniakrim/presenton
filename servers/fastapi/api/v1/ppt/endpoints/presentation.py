@@ -3249,10 +3249,15 @@ async def check_async_presentation_generation_status(
         raise HTTPException(
             status_code=404, detail="No presentation generation task found"
         )
-    response = status.model_copy(deep=True)
-    if response.data:
-        response.data = absolute_mcp_result_links(request, response.data)
-    return response
+    # Set `data` via model_copy's own `update` (built into the new instance) rather
+    # than assigning to the copy afterward: SQLModel keeps the copy SQLAlchemy-
+    # instrumented at the class level, so a post-copy `response.data = ...` routes
+    # through the ORM's instrumented setter and raises ObjectDereferencedError
+    # against the copy's never-attached parent state.
+    data = status.data
+    if data:
+        data = absolute_mcp_result_links(request, data)
+    return status.model_copy(update={"data": data} if data else {})
 
 
 @PRESENTATION_ROUTER.post("/edit", response_model=PresentationPathAndEditPath)

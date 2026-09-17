@@ -30,15 +30,15 @@ import {
 } from "@/utils/presentationLimits";
 import { Button } from "@/components/ui/button";
 import GenerationModeDialog from "./GenerationModeDialog";
-import type { GenerationMode } from "@/utils/presentationGenerationMode";
+import type { UploadModeSelection } from "@/utils/presentationGenerationMode";
 
 // Types
 interface ConfigurationSelectsProps {
   config: PresentationConfig;
   onConfigChange: (key: keyof PresentationConfig, value: any) => void;
   compact?: boolean;
-  mode?: GenerationMode;
-  onModeChange?: (mode: GenerationMode) => void;
+  mode?: UploadModeSelection;
+  onModeChange?: (mode: UploadModeSelection) => void;
 }
 
 type SlideOption =
@@ -405,7 +405,7 @@ export function ConfigurationSelects({
             compact ? "h-[34px] shadow-none" : "h-[38px] shadow-sm",
           )}
         >
-          {mode === "standard" ? "Standard" : "Smart"}
+          {mode === "standard" ? "Standard" : mode === "smart" ? "Smart" : "Skywork"}
           <ChevronUp className="h-4 w-4" />
         </Button>
       ) : null}
