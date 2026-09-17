@@ -28,8 +28,6 @@ export type SkyworkTaskData = {
   filename?: string;
   path?: string;
   download_url?: string;
-  presentation_id?: string | null;
-  editable?: boolean;
 };
 
 export type GenerationTaskStatus = {
