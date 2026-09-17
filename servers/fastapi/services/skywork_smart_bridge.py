@@ -166,14 +166,21 @@ def _rehost_asset(src_path: str) -> str:
     return filesystem_image_path_to_app_data_url(dest_path)
 
 
-def _rehost_referenced_assets(html: str, images_dir: str) -> str:
-    """Rewrite relative image/url() references to rehosted app_data/images URLs."""
+def _rehost_referenced_assets(html: str, asset_root: str) -> str:
+    """Rewrite relative image/url() references to rehosted app_data/images URLs.
+
+    `convert_pptx_to_html` writes slide asset references relative to the
+    conversion's manifest (e.g. `images/slide.png`), not relative to
+    `images_dir` itself (`images_dir` already points *at* that `images/`
+    folder) - resolve refs against `asset_root`, the manifest's own
+    directory, or every reference silently fails to rehost.
+    """
 
     def replace(match: re.Match) -> str:
         ref = match.group(1) or match.group(2)
         if not ref or ref.startswith(("http://", "https://", "data:", "blob:", "/app_data/")):
             return match.group(0)
-        source_path = os.path.normpath(os.path.join(images_dir, ref))
+        source_path = os.path.normpath(os.path.join(asset_root, ref))
         if not os.path.isfile(source_path):
             return match.group(0)
         try:
@@ -186,7 +193,7 @@ def _rehost_referenced_assets(html: str, images_dir: str) -> str:
     return _ASSET_REF_RE.sub(replace, html)
 
 
-def _transpile_slide(raw_slide_html: str, images_dir: str) -> Optional[str]:
+def _transpile_slide(raw_slide_html: str, asset_root: str) -> Optional[str]:
     extracted = _extract_root(raw_slide_html)
     if extracted is None:
         return None
@@ -197,7 +204,7 @@ def _transpile_slide(raw_slide_html: str, images_dir: str) -> Optional[str]:
         '<section class="relative h-[720px] w-[1280px] overflow-hidden" '
         f'style="background:{background}">{tagged}</section>'
     )
-    return _rehost_referenced_assets(section, images_dir)
+    return _rehost_referenced_assets(section, asset_root)
 
 
 async def _image_fallback_slide(raw_slide_html: str, index: int) -> dict[str, str]:
@@ -220,11 +227,12 @@ async def build_smart_slides(pptx_path: str) -> list[dict[str, str]]:
     whole deck never fails outright.
     """
     document: PptxToHtmlDocument = await EXPORT_TASK_SERVICE.convert_pptx_to_html(pptx_path)
+    asset_root = os.path.dirname(document.images_dir)
 
     slides: list[dict[str, str]] = []
     for index, raw_slide_html in enumerate(document.slides):
         try:
-            transpiled = _transpile_slide(raw_slide_html, document.images_dir)
+            transpiled = _transpile_slide(raw_slide_html, asset_root)
             if transpiled is None:
                 raise ValueError("could not locate the slide's root element")
             slides.append(_slide_from_html(transpiled, index))

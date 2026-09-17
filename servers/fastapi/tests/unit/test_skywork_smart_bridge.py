@@ -7,6 +7,7 @@ from services.export_task_service import HtmlToImageTaskResult, PptxToHtmlDocume
 from services.skywork_smart_bridge import (
     _extract_root,
     _has_visible_text,
+    _rehost_referenced_assets,
     _split_top_level_children,
     _tag_decorative,
     _transpile_slide,
@@ -84,6 +85,27 @@ def test_transpile_slide_produces_a_smart_html_validator_passing_section():
 
 def test_transpile_slide_returns_none_when_root_cannot_be_found():
     assert _transpile_slide("<html><body><p>x</p></body></html>", "/nonexistent") is None
+
+
+def test_rehost_referenced_assets_resolves_manifest_relative_paths(tmp_path):
+    # convert_pptx_to_html's manifest points images_dir at the "images/"
+    # folder itself, but slide HTML references assets relative to the
+    # manifest's own directory (the folder *containing* images/), e.g.
+    # src="images/slide.png" - asset_root must be that containing folder,
+    # not images_dir, or every reference silently fails to rehost.
+    images_dir = tmp_path / "images"
+    images_dir.mkdir()
+    (images_dir / "SK-1-img-1-abc123.png").write_bytes(b"fake-png")
+
+    html = '<img src="images/SK-1-img-1-abc123.png">'
+    with patch(
+        "services.skywork_smart_bridge._rehost_asset",
+        return_value="/app_data/images/rehosted.png",
+    ) as mock_rehost:
+        result = _rehost_referenced_assets(html, str(tmp_path))
+
+    mock_rehost.assert_called_once_with(str(images_dir / "SK-1-img-1-abc123.png"))
+    assert result == '<img src="/app_data/images/rehosted.png">'
 
 
 def test_build_smart_slides_uses_transpile_and_falls_back_on_failure():

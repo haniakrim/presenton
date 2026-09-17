@@ -465,7 +465,8 @@ def test_get_component_schema_extracts_infographic_content_without_vector_conten
     assert list(properties) == ["progress"]
     assert properties["progress"]["x-element-type"] == "infographic"
     assert properties["progress"]["properties"]["data"]["properties"]["type"] == {
-        "const": "progress_bar"
+        "type": "string",
+        "const": "progress_bar",
     }
     assert "colors" not in properties["progress"]["properties"]
     assert properties["progress"]["required"] == ["data", "takeaway"]
@@ -492,7 +493,10 @@ def test_get_component_schema_preserves_vertical_funnel_type_and_item_limits():
     schema = get_component_schema(component)
     data_schema = schema["properties"]["stages"]["properties"]["data"]
 
-    assert data_schema["properties"]["type"] == {"const": "vertical_funnel"}
+    assert data_schema["properties"]["type"] == {
+        "type": "string",
+        "const": "vertical_funnel",
+    }
     assert data_schema["properties"]["items"]["minItems"] == 1
     assert data_schema["properties"]["items"]["maxItems"] == 8
 
