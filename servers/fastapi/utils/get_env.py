@@ -412,6 +412,11 @@ def get_gpt_image_1_5_quality_env():
     return os.getenv("GPT_IMAGE_1_5_QUALITY")
 
 
+# Gpt Image 2 Quality
+def get_gpt_image_2_quality_env():
+    return os.getenv("GPT_IMAGE_2_QUALITY")
+
+
 # Image model overrides (defaults live in the generation service)
 def get_dall_e_3_model_env():
     return os.getenv("DALL_E_3_MODEL")
@@ -419,6 +424,10 @@ def get_dall_e_3_model_env():
 
 def get_gpt_image_1_5_model_env():
     return os.getenv("GPT_IMAGE_1_5_MODEL")
+
+
+def get_gpt_image_2_model_env():
+    return os.getenv("GPT_IMAGE_2_MODEL")
 
 
 def get_gemini_flash_image_model_env():
