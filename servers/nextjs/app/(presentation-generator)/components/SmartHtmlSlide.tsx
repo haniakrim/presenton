@@ -1,7 +1,7 @@
 "use client";
 
 import DOMPurify, { type Config as DOMPurifyConfig } from "dompurify";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useTailwindRuntimeReady } from "@/components/runtime/TailwindBrowserRuntime";
 import {
@@ -42,6 +42,61 @@ function fontAssets(fonts: unknown) {
     .map(renderLocalFontFaceCss)
     .join("");
   return css ? `<style>${css.replaceAll("</style", "<\\/style")}</style>` : "";
+}
+
+// Same-origin image URLs the slide HTML references (e.g. "/app_data/images/...").
+const SAME_ORIGIN_IMG_SRC = /src="(\/[^"]+)"/g;
+
+// This iframe is sandboxed WITHOUT allow-same-origin, so it has an opaque
+// origin - the browser treats it as cross-site no matter what it contains.
+// The session cookie is SameSite=Lax, so it is never sent on that iframe's
+// own <img> requests, and every same-origin image silently 401s. Fetch each
+// one here, in the real page's own origin (where the cookie DOES apply),
+// and inline it as a data URI before handing the HTML to the iframe -
+// avoids ever needing the sandboxed context to authenticate anything.
+const inlinedImageCache = new Map<string, Promise<string>>();
+
+async function fetchAsDataUrl(src: string): Promise<string> {
+  const cached = inlinedImageCache.get(src);
+  if (cached) return cached;
+
+  const promise = fetch(src, { credentials: "include" })
+    .then((response) => {
+      if (!response.ok) throw new Error(`${response.status}`);
+      return response.blob();
+    })
+    .then(
+      (blob) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        })
+    )
+    .catch(() => src); // fall back to the original src on any failure
+
+  inlinedImageCache.set(src, promise);
+  return promise;
+}
+
+async function inlineSameOriginImages(html: string): Promise<string> {
+  const srcs = new Set<string>();
+  for (const match of html.matchAll(SAME_ORIGIN_IMG_SRC)) {
+    srcs.add(match[1]);
+  }
+  if (srcs.size === 0) return html;
+
+  const entries = await Promise.all(
+    Array.from(srcs, async (src) => [src, await fetchAsDataUrl(src)] as const)
+  );
+
+  let result = html;
+  for (const [src, dataUrl] of entries) {
+    if (dataUrl === src) continue;
+    result = result.split(`src="${src}"`).join(`src="${dataUrl}"`);
+  }
+  return result;
 }
 
 function previewDocument(html: string, fonts: unknown) {
@@ -169,7 +224,17 @@ function IframeSmartHtmlSlide({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
-  const srcDoc = useMemo(() => previewDocument(html, fonts), [fonts, html]);
+  const [srcDoc, setSrcDoc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    inlineSameOriginImages(html).then((inlinedHtml) => {
+      if (!cancelled) setSrcDoc(previewDocument(inlinedHtml, fonts));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fonts, html]);
 
   useEffect(() => {
     if (fixedSize) return;
@@ -203,13 +268,15 @@ function IframeSmartHtmlSlide({
           opacity: scale ? 1 : 0,
         }}
       >
-        <iframe
-          className="block h-[720px] w-[1280px] border-0 bg-white"
-          sandbox="allow-scripts"
-          srcDoc={srcDoc}
-          tabIndex={-1}
-          title={title}
-        />
+        {srcDoc !== null && (
+          <iframe
+            className="block h-[720px] w-[1280px] border-0 bg-white"
+            sandbox="allow-scripts"
+            srcDoc={srcDoc}
+            tabIndex={-1}
+            title={title}
+          />
+        )}
       </div>
     </div>
   );
