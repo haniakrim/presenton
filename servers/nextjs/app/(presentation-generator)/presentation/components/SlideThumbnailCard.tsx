@@ -91,21 +91,17 @@ const SlideThumbnailCardComponent = forwardRef<
               aria-hidden="true"
             />
           ) : typeof slide.html_content === "string" && slide.html_content.trim() ? (
-            <div
-              className="absolute left-0 top-0 pointer-events-none"
-              style={{
-                width: 1280,
-                height: 720,
-                // `zoom` reflows and rerenders text natively at the target
-                // size; `transform: scale()` renders at full size first and
-                // bitmap-downsamples, which washes out thinner body text
-                // while bold headings survive (confirmed live: headings
-                // stayed crisp, body text went near-invisible-gray).
-                zoom: SCALE,
-              }}
-            >
+            // SmartHtmlSlide renders its own content inside an iframe; a
+            // transform/zoom here on the *outside* of that iframe can only
+            // bitmap-scale its already-rendered surface (which washes out
+            // thinner body text, confirmed live), so the target scale is
+            // passed in via renderScale and applied *inside* the iframe's
+            // own document instead - this wrapper just needs to size the
+            // container area, not transform anything.
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-full">
               <SmartHtmlSlide
                 fixedSize
+                renderScale={SCALE}
                 fonts={fonts}
                 html={slide.html_content}
                 title={`Slide ${index + 1} thumbnail`}

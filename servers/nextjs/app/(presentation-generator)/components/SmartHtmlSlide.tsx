@@ -44,7 +44,12 @@ function fontAssets(fonts: unknown) {
   return css ? `<style>${css.replaceAll("</style", "<\\/style")}</style>` : "";
 }
 
-function previewDocument(html: string, fonts: unknown) {
+function previewDocument(html: string, fonts: unknown, zoom = 1) {
+  // `zoom` on html/body (not a CSS transform on an ancestor) makes the
+  // iframe reflow and rerender text natively at the smaller physical size -
+  // a transform/zoom applied outside the iframe can only bitmap-scale its
+  // already-rendered surface, which washes out thinner text at small sizes.
+  const zoomCss = zoom !== 1 ? `html,body{zoom:${zoom}}` : "";
   return `<!doctype html>
   <html>
     <head>
@@ -62,6 +67,7 @@ function previewDocument(html: string, fonts: unknown) {
       <style>
         html,body{width:1280px;height:720px;min-width:1280px;min-height:720px;margin:0;overflow:hidden;background:#fff}
         *{box-sizing:border-box}
+        ${zoomCss}
       </style>
     </head>
     <body>${html}</body>
@@ -161,15 +167,16 @@ function IframeSmartHtmlSlide({
   fonts,
   fixedSize,
   title,
+  renderScale,
 }: {
   html: string;
   fonts?: unknown;
   fixedSize: boolean;
   title: string;
+  renderScale?: number;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
-  const srcDoc = useMemo(() => previewDocument(html, fonts), [fonts, html]);
 
   useEffect(() => {
     if (fixedSize) return;
@@ -182,29 +189,44 @@ function IframeSmartHtmlSlide({
     return () => observer.disconnect();
   }, [fixedSize]);
 
-  const scale = fixedSize ? 1 : width ? Math.min(width / SLIDE_WIDTH, 1) : 0;
+  const scale = fixedSize
+    ? renderScale ?? 1
+    : width
+    ? Math.min(width / SLIDE_WIDTH, 1)
+    : 0;
+  const srcDoc = useMemo(
+    () => previewDocument(html, fonts, scale || 1),
+    [fonts, html, scale]
+  );
 
   return (
     <div
       ref={containerRef}
       className="relative w-full overflow-hidden bg-white"
       style={{
-        width: fixedSize ? SLIDE_WIDTH : undefined,
-        height: fixedSize ? SLIDE_HEIGHT : SLIDE_HEIGHT * (scale || 1),
+        width: fixedSize ? SLIDE_WIDTH * (scale || 1) : undefined,
+        height: SLIDE_HEIGHT * (scale || 1),
       }}
     >
       <div
         className="absolute left-1/2 top-0"
         style={{
-          width: SLIDE_WIDTH,
-          height: SLIDE_HEIGHT,
-          transform: `translateX(-50%) scale(${scale || 1})`,
-          transformOrigin: "top center",
+          width: SLIDE_WIDTH * (scale || 1),
+          height: SLIDE_HEIGHT * (scale || 1),
+          transform: "translateX(-50%)",
           opacity: scale ? 1 : 0,
         }}
       >
+        {/* The iframe is sized to the actual rendered pixels, and `zoom`
+            is applied inside its own document (see previewDocument) so it
+            reflows and rerenders text natively at that size, instead of
+            being bitmap-scaled down from a full 1280x720 render. */}
         <iframe
-          className="block h-[720px] w-[1280px] border-0 bg-white"
+          className="block border-0 bg-white"
+          style={{
+            width: SLIDE_WIDTH * (scale || 1),
+            height: SLIDE_HEIGHT * (scale || 1),
+          }}
           sandbox="allow-scripts"
           srcDoc={srcDoc}
           tabIndex={-1}
@@ -221,12 +243,18 @@ export default function SmartHtmlSlide({
   fixedSize = false,
   title = "Smart presentation slide",
   executeScripts = true,
+  renderScale,
 }: {
   html: string;
   fonts?: unknown;
   fixedSize?: boolean;
   title?: string;
   executeScripts?: boolean;
+  // Only meaningful with fixedSize: renders at this fraction of native
+  // 1280x720 by applying `zoom` inside the iframe's own document, instead
+  // of the caller bitmap-scaling a full-size render from outside (which
+  // washes out thinner text at small sizes - see previewDocument).
+  renderScale?: number;
 }) {
   if (USE_LINUX_IN_PAGE_RENDERER) {
     return (
@@ -246,6 +274,7 @@ export default function SmartHtmlSlide({
       fonts={fonts}
       html={html}
       title={title}
+      renderScale={renderScale}
     />
   );
 }
