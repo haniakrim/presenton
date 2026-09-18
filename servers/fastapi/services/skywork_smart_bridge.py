@@ -210,10 +210,21 @@ def _transpile_slide(raw_slide_html: str, asset_root: str) -> Optional[str]:
 async def _image_fallback_slide(raw_slide_html: str, index: int) -> dict[str, str]:
     result = await EXPORT_TASK_SERVICE.render_html_to_image(raw_slide_html, 1280, 720)
     image_url = _rehost_asset(result.path)
+    # _slide_from_html's validator requires the literal Tailwind class
+    # tokens below, so they stay - but the thumbnail rail renders each slide
+    # in its own sandboxed iframe that reloads the Tailwind CDN script from
+    # scratch, and a section whose ONLY content is one full-bleed image has
+    # nothing else to paint while that JIT compilation is still pending, so
+    # it can render as a persistently blank thumbnail. Redundant inline
+    # sizing has no such dependency and paints regardless of Tailwind's load
+    # timing.
     section = (
         '<section class="relative h-[720px] w-[1280px] overflow-hidden" '
+        'style="width:1280px;height:720px" '
         f'data-slide-title="Slide {index + 1}">'
-        f'<img src="{image_url}" alt="" class="absolute inset-0 h-full w-full object-cover" />'
+        f'<img src="{image_url}" alt="" '
+        'class="absolute inset-0 h-full w-full object-cover" '
+        'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />'
         "</section>"
     )
     return _slide_from_html(section, index)
