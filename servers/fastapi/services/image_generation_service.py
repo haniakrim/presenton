@@ -16,6 +16,10 @@ from models.sql.image_asset import ImageAsset
 from utils.get_env import (
     get_dall_e_3_quality_env,
     get_gpt_image_1_5_quality_env,
+    get_dall_e_3_model_env,
+    get_gpt_image_1_5_model_env,
+    get_gemini_flash_image_model_env,
+    get_nanobanana_pro_image_model_env,
     get_pexels_api_key_env,
     get_open_webui_image_url_env,
     get_open_webui_image_api_key_env,
@@ -190,7 +194,7 @@ class ImageGenerationService:
         return await self.generate_image_openai(
             prompt,
             output_directory,
-            "dall-e-3",
+            get_dall_e_3_model_env() or "dall-e-3",
             get_dall_e_3_quality_env() or "standard",
         )
 
@@ -200,7 +204,7 @@ class ImageGenerationService:
         return await self.generate_image_openai(
             prompt,
             output_directory,
-            "gpt-image-1.5",
+            get_gpt_image_1_5_model_env() or "gpt-image-1.5",
             get_gpt_image_1_5_quality_env() or "medium",
         )
 
@@ -349,17 +353,21 @@ class ImageGenerationService:
     async def generate_image_gemini_flash(
         self, prompt: str, output_directory: str
     ) -> str:
-        """Generate image using Gemini Flash (gemini-2.5-flash-image)."""
+        """Generate image using Gemini Flash (gemini-2.5-flash-image by default)."""
         return await self._generate_image_google(
-            prompt, output_directory, "gemini-2.5-flash-image"
+            prompt,
+            output_directory,
+            get_gemini_flash_image_model_env() or "gemini-2.5-flash-image",
         )
 
     async def generate_image_nanobanana_pro(
         self, prompt: str, output_directory: str
     ) -> str:
-        """Generate image using NanoBanana Pro (gemini-3-pro-image-preview)."""
+        """Generate image using NanoBanana Pro (gemini-3-pro-image-preview by default)."""
         return await self._generate_image_google(
-            prompt, output_directory, "gemini-3-pro-image-preview"
+            prompt,
+            output_directory,
+            get_nanobanana_pro_image_model_env() or "gemini-3-pro-image-preview",
         )
 
     async def get_image_from_pexels(
