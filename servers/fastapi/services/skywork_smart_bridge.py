@@ -211,9 +211,19 @@ def _transpile_slide(raw_slide_html: str, asset_root: str) -> Optional[str]:
     background, inner = extracted
     children = _split_top_level_children(inner)
     tagged = "".join(_tag_decorative(child) for child in children)
+    # The width/height/overflow classes below are also required literally by
+    # _slide_from_html's validator, but the sidebar thumbnail rail renders
+    # each slide in a sandboxed (sandbox="allow-scripts", opaque-origin)
+    # iframe scaled down via an ancestor transform - in that specific
+    # combination, a section sized only via Tailwind's dynamically-injected
+    # runtime stylesheet can fail to ever paint at all (confirmed via a
+    # local repro: identical content painted correctly the instant the size
+    # was ALSO available as a plain inline style, available at first paint
+    # with no dependency on the Tailwind script finishing). Redundant inline
+    # sizing costs nothing and removes that dependency entirely.
     section = (
         '<section class="relative h-[720px] w-[1280px] overflow-hidden" '
-        f'style="background:{background}">{tagged}</section>'
+        f'style="background:{background};width:1280px;height:720px">{tagged}</section>'
     )
     return _rehost_referenced_assets(section, asset_root)
 
