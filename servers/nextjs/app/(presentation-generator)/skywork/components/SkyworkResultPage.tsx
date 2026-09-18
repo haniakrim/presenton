@@ -47,6 +47,21 @@ const SkyworkResultPage = () => {
     };
   }, [taskId]);
 
+  // Skywork's .pptx was successfully bridged into an editable Smart-mode
+  // deck — open it the same way local Smart mode does, instead of showing
+  // the download-only "ready" screen.
+  useEffect(() => {
+    if (
+      task?.status === "completed" &&
+      task.data?.editable &&
+      task.data?.presentation_id
+    ) {
+      router.push(
+        `/presentation?id=${task.data.presentation_id}&stream=true&type=smart`
+      );
+    }
+  }, [task, router]);
+
   if (!taskId) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
@@ -74,6 +89,16 @@ const SkyworkResultPage = () => {
     );
   }
 
+  if (status === "completed" && data?.editable && data?.presentation_id) {
+    // Redirect handled by the effect above; avoid flashing the download UI.
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#EBE9FE] border-t-[#7A5AF8]" />
+        <p className="text-lg font-medium text-[#333333]">Opening in the editor...</p>
+      </div>
+    );
+  }
+
   if (status === "completed" && data?.path) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
@@ -83,6 +108,9 @@ const SkyworkResultPage = () => {
         {data.title && (
           <p className="max-w-md text-sm text-[#666666]">{data.title}</p>
         )}
+        <p className="max-w-md text-sm text-[#999999]">
+          Couldn't be opened as an editable deck this time — here's the file.
+        </p>
         <a
           href={data.path}
           download={data.filename}

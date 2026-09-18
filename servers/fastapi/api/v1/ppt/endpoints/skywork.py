@@ -1,11 +1,17 @@
 """Skywork-backed Smart mode: server-side call to Skywork's hosted PPT API.
 
-The finished .pptx is delivered as a download. Download-only by design;
-the Smart-editor bridge tried this session was reverted after repeated
-generation issues (broken image paths, schema/validation failures).
+The finished .pptx is always kept as a download. It's also run through
+`skywork_smart_bridge` to try to open it as a real, editable Smart-mode
+presentation — same editor Standard/Smart use. Any slide (or the whole deck)
+that can't be made to satisfy Smart mode's own validator falls back
+gracefully; the download always succeeds either way.
+
+See /Users/haniakrim/.claude/plans/greedy-imagining-swing.md for the original
+download-only design this extends.
 """
 import logging
 import os
+import uuid
 from datetime import datetime
 from typing import Any, Optional
 
@@ -20,9 +26,12 @@ from api.v1.auth.context import (
 )
 from enums.async_task_status import AsyncTaskStatus
 from models.sql.async_task import AsyncTaskModel
+from models.sql.presentation import PresentationModel, PresentationVersion
+from models.sql.slide import SlideModel
 from services.database import async_session_maker, get_async_session
 from services.documents_loader import DocumentsLoader
 from services.skywork_client import SkyworkError, download_pptx, generate_pptx, phase_message
+from services.skywork_smart_bridge import build_smart_slides
 from services.temp_file_service import TEMP_FILE_SERVICE
 from utils.asset_directory_utils import get_exports_directory
 from utils.get_env import get_app_data_directory_env, get_skywork_api_key_env
@@ -142,6 +151,55 @@ async def _run_skywork_task(
                     dest_path, app_data_directory
                 ).replace(os.sep, "/")
 
+                task.message = "Preparing editable slides..."
+                task.data = {
+                    **(task.data or {}),
+                    "phase": "smart_bridge",
+                    "progress": 96,
+                    "message": task.message,
+                }
+                task.updated_at = datetime.now()
+                sql_session.add(task)
+                await sql_session.commit()
+
+                presentation_id: Optional[str] = None
+                try:
+                    smart_slides = await build_smart_slides(dest_path)
+                except Exception:
+                    logger.exception(
+                        "[skywork.generate] smart bridge failed task_id=%s; "
+                        "keeping the download-only result",
+                        task_id,
+                    )
+                    smart_slides = []
+
+                if smart_slides:
+                    presentation = PresentationModel(
+                        id=uuid.uuid4(),
+                        version=PresentationVersion.V2_STANDARD,
+                        content=query,
+                        n_slides=len(smart_slides),
+                        language=language,
+                        title=query[:120] or "Skywork Presentation",
+                        generation_mode="smart",
+                        fonts={"Inter": "/vendor/fonts/sans_serif/inter/Inter[opsz,wght].ttf"},
+                    )
+                    sql_session.add(presentation)
+                    for index, slide in enumerate(smart_slides):
+                        sql_session.add(
+                            SlideModel(
+                                presentation=presentation.id,
+                                layout_group="smart-html",
+                                layout="smart-html",
+                                index=index,
+                                content={"title": slide["title"]},
+                                html_content=slide["html"],
+                                speaker_note=slide.get("speaker_note", ""),
+                            )
+                        )
+                    await sql_session.commit()
+                    presentation_id = str(presentation.id)
+
                 task.status = AsyncTaskStatus.COMPLETED
                 task.message = "Export complete."
                 task.data = {
@@ -152,6 +210,8 @@ async def _run_skywork_task(
                     "filename": filename,
                     "path": served_path,
                     "download_url": download_url,
+                    "presentation_id": presentation_id,
+                    "editable": presentation_id is not None,
                 }
                 task.updated_at = datetime.now()
                 sql_session.add(task)
