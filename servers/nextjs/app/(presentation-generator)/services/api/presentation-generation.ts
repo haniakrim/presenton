@@ -166,11 +166,13 @@ export class PresentationGenerationApi {
     language,
     n_slides,
     file_paths,
+    outline_slides,
   }: {
     content: string;
     language: string | null;
     n_slides?: number | null;
     file_paths?: string[];
+    outline_slides?: { content: string }[];
   }): Promise<GenerationTaskStatus | null> {
     const response = await fetch(getApiUrl(`/api/v1/ppt/skywork/generate`), {
       method: "POST",
@@ -180,6 +182,7 @@ export class PresentationGenerationApi {
         language: language ?? "English",
         n_slides: n_slides ?? null,
         file_paths,
+        outline_slides,
       }),
       cache: "no-cache",
     });

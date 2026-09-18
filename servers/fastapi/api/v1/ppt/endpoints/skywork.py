@@ -43,11 +43,16 @@ SKYWORK_ROUTER = APIRouter(prefix="/skywork", tags=["Skywork"])
 SKYWORK_ASYNC_TASK_TYPE = "skywork.ppt.generate"
 
 
+class SkyworkOutlineSlide(BaseModel):
+    content: str = ""
+
+
 class SkyworkGenerateRequest(BaseModel):
     content: str = ""
     language: str = "English"
     n_slides: Optional[int] = None
     file_paths: Optional[list[str]] = None
+    outline_slides: Optional[list[SkyworkOutlineSlide]] = None
 
 
 async def _build_reference_text(
@@ -63,6 +68,27 @@ async def _build_reference_text(
     return "\n\n".join(parts)[:200_000]
 
 
+def _outline_reference_text(outline_slides: Optional[list[SkyworkOutlineSlide]]) -> str:
+    """Format an approved/edited outline as reference text for Skywork.
+
+    Skywork has no "generate from this exact outline" mode - it always
+    decides its own final structure - so this is guidance, not a contract.
+    """
+    if not outline_slides:
+        return ""
+    numbered = [
+        f"Slide {index + 1}: {slide.content.strip()}"
+        for index, slide in enumerate(outline_slides)
+        if slide.content.strip()
+    ]
+    if not numbered:
+        return ""
+    return (
+        "Follow this approved outline as closely as possible, one slide per "
+        "entry, in this order:\n\n" + "\n\n".join(numbered)
+    )
+
+
 @SKYWORK_ROUTER.post("/generate", response_model=AsyncTaskModel)
 async def start_skywork_generation(
     request: SkyworkGenerateRequest,
@@ -72,15 +98,20 @@ async def start_skywork_generation(
     if not get_skywork_api_key_env():
         raise HTTPException(status_code=404, detail="Skywork is not configured")
 
-    reference = await _build_reference_text(request.file_paths, request.language)
+    document_reference = await _build_reference_text(request.file_paths, request.language)
+    outline_reference = _outline_reference_text(request.outline_slides)
+    reference = "\n\n".join(part for part in (document_reference, outline_reference) if part)
     if not request.content.strip() and not reference:
         raise HTTPException(
             status_code=400, detail="A prompt or document is required"
         )
 
     query = request.content.strip()
-    if request.n_slides:
-        query = f"{query}\n\nPlease produce about {request.n_slides} slides."
+    n_slides = request.n_slides or (
+        len(request.outline_slides) if request.outline_slides else None
+    )
+    if n_slides:
+        query = f"{query}\n\nPlease produce about {n_slides} slides."
 
     task = AsyncTaskModel(
         type=SKYWORK_ASYNC_TASK_TYPE,

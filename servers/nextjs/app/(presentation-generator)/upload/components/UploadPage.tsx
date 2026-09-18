@@ -271,41 +271,10 @@ const UploadPage = ({ presentationGenerationMode }: UploadPageProps) => {
     }
 
     const params = new URLSearchParams({ id: presentationId });
-    return `/outline?${params.toString()}`;
-  };
-
-  /**
-   * Skywork is its own explicit mode (separate from Smart): it calls Skywork's
-   * hosted API server-side and delivers the result as a downloadable .pptx,
-   * not opened in the built-in editor. Returns true once handled (navigated
-   * on success, or shown an error) so the caller skips the normal
-   * createPresentation flow entirely when this mode is selected.
-   */
-  const trySkywork = async (documentPaths: string[]): Promise<boolean> => {
-    if (generationMode !== "skywork") return false;
-
-    const task = await PresentationGenerationApi.startSkyworkGeneration({
-      content: config?.prompt ?? "",
-      language: config?.language ?? "English",
-      n_slides: parseLimitedSlideCount(config?.slides),
-      file_paths: documentPaths,
-    });
-    if (!task) {
-      setLoadingState({
-        isLoading: false,
-        message: "",
-        duration: 0,
-        showProgress: false,
-      });
-      notify.error(
-        "Skywork is not configured",
-        "Set SKYWORK_API_KEY on the server to use this mode."
-      );
-      return true;
+    if (generationMode === "skywork") {
+      params.set("skywork", "true");
     }
-
-    router.push(`/skywork?task=${task.id}`);
-    return true;
+    return `/outline?${params.toString()}`;
   };
 
   const ensureStockImageProviderReady = async (): Promise<boolean> => {
@@ -450,8 +419,6 @@ const UploadPage = ({ presentationGenerationMode }: UploadPageProps) => {
       extra_info: "",
     });
 
-    if (await trySkywork(documentPaths)) return;
-
     const createResponse = await PresentationGenerationApi.createPresentation({
       content: config?.prompt ?? "",
       version: "v2-standard",
@@ -464,8 +431,9 @@ const UploadPage = ({ presentationGenerationMode }: UploadPageProps) => {
       include_table_of_contents: !!config?.includeTableOfContents,
       include_title_slide: !!config?.includeTitleSlide,
       web_search: !!config?.webSearch,
-      // trySkywork already returned above when generationMode is "skywork".
-      generation_mode: generationMode as GenerationMode,
+      // Skywork's outline is a draft to review, generated the same way
+      // Standard's is; the real Skywork call happens after approval.
+      generation_mode: generationMode === "skywork" ? "standard" : (generationMode as GenerationMode),
     });
 
     dispatch(setPptGenUploadState({
@@ -513,9 +481,7 @@ const UploadPage = ({ presentationGenerationMode }: UploadPageProps) => {
 
     const selectedLanguage = config?.language ?? "";
 
-    if (await trySkywork([])) return;
-
-    // Standard mode continues to outline review; Smart mode streams the deck directly.
+    // Standard and Skywork continue to outline review; Smart streams the deck directly.
     const createResponse = await PresentationGenerationApi.createPresentation({
       content: config?.prompt ?? "",
 
@@ -528,8 +494,9 @@ const UploadPage = ({ presentationGenerationMode }: UploadPageProps) => {
       include_table_of_contents: !!config?.includeTableOfContents,
       include_title_slide: !!config?.includeTitleSlide,
       web_search: !!config?.webSearch,
-      // trySkywork already returned above when generationMode is "skywork".
-      generation_mode: generationMode as GenerationMode,
+      // Skywork's outline is a draft to review, generated the same way
+      // Standard's is; the real Skywork call happens after approval.
+      generation_mode: generationMode === "skywork" ? "standard" : (generationMode as GenerationMode),
     });
 
     dispatch(setPptGenUploadState({

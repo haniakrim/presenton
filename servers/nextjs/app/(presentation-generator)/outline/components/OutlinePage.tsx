@@ -36,12 +36,20 @@ import type { GeneratedThemeColors } from "../../services/api/theme";
 import { useOutlineManagement } from "../hooks/useOutlineManagement";
 import { useOutlineStreaming } from "../hooks/useOutlineStreaming";
 import { usePresentationGeneration } from "../hooks/usePresentationGeneration";
+import type { LoadingState } from "../types/index";
 import EmptyStateView from "./EmptyStateView";
 import GenerateButton from "./GenerateButton";
 import OutlineContent from "./OutlineContent";
 import OutlinePromptBar from "./OutlinePromptBar";
 import OutlineStandardHeader from "./OutlineStandardHeader";
 import TemplateSelection from "./TemplateSelection";
+
+const DEFAULT_LOADING_STATE: LoadingState = {
+  message: "",
+  isLoading: false,
+  showProgress: false,
+  duration: 0,
+};
 
 const DEFAULT_OUTLINE_CONFIG: PresentationConfig = {
   slides: null,
@@ -120,14 +128,18 @@ const OutlinePage: React.FC = () => {
   );
   const queryPresentationId = searchParams.get("id")?.trim() || null;
   const suggestedTemplate = searchParams.get("template")?.trim() || null;
+  const isSkyworkMode = searchParams.get("skywork") === "true";
   const presentation_id = queryPresentationId || storedPresentationId;
   const { config: savedConfig, files } = useSelector(
     (state: RootState) => state.pptGenUpload
   );
 
-  const [isTemplateStage, setIsTemplateStage] = useState(true);
+  // Skywork has no template concept - it designs its own layout - so skip
+  // template selection and unlock outline streaming immediately, the same
+  // way it unlocks once Standard mode picks a real template.
+  const [isTemplateStage, setIsTemplateStage] = useState(!isSkyworkMode);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
-    null
+    isSkyworkMode ? "__skywork__" : null
   );
   const [themeOverride, setThemeOverride] =
     useState<GeneratedThemeColors | null>(null);
@@ -137,6 +149,9 @@ const OutlinePage: React.FC = () => {
   const [isRegeneratingOutline, setIsRegeneratingOutline] = useState(false);
   const [hasOutlineStreamFinished, setHasOutlineStreamFinished] =
     useState(false);
+  const [skyworkLoadingState, setSkyworkLoadingState] = useState<LoadingState>(
+    DEFAULT_LOADING_STATE
+  );
 
   const hasSelectedTemplate = selectedTemplateId !== null;
   const streamState = useOutlineStreaming(
@@ -323,6 +338,54 @@ const OutlinePage: React.FC = () => {
     selectedTemplateId,
   ]);
 
+  const handleSkyworkSubmit = useCallback(async () => {
+    if (!outlines || outlines.length === 0) {
+      toast.error("Outlines not ready", {
+        description:
+          "Please wait for your outline to finish generating before continuing.",
+      });
+      return;
+    }
+
+    const preparedOutlines = limitOutlines(outlines);
+    setSkyworkLoadingState({
+      message: "Starting Skywork generation...",
+      isLoading: true,
+      showProgress: true,
+      duration: 30,
+    });
+
+    try {
+      const task = await PresentationGenerationApi.startSkyworkGeneration({
+        content: draftConfig.prompt ?? "",
+        language: draftConfig.language ?? "English",
+        n_slides:
+          parseLimitedSlideCount(draftConfig.slides) ?? preparedOutlines.length,
+        file_paths: documentPaths,
+        outline_slides: preparedOutlines,
+      });
+
+      if (!task) {
+        toast.error("Skywork is not configured", {
+          description: "Set SKYWORK_API_KEY on the server to use this mode.",
+        });
+        return;
+      }
+
+      router.push(`/skywork?task=${task.id}`);
+    } catch (error: unknown) {
+      console.error("Error starting Skywork generation from outline", error);
+      toast.error("Generation error", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to start Skywork generation.",
+      });
+    } finally {
+      setSkyworkLoadingState(DEFAULT_LOADING_STATE);
+    }
+  }, [documentPaths, draftConfig, outlines, router]);
+
   const handleUpdateOutline = (index: number, newContent: string) => {
     const slideIndex = index - 1;
     if (!outlines[slideIndex]) return;
@@ -380,16 +443,18 @@ const OutlinePage: React.FC = () => {
       )}
     >
       <OverlayLoader
-        show={loadingState.isLoading}
-        text={loadingState.message}
-        showProgress={loadingState.showProgress}
-        duration={loadingState.duration}
+        show={(isSkyworkMode ? skyworkLoadingState : loadingState).isLoading}
+        text={(isSkyworkMode ? skyworkLoadingState : loadingState).message}
+        showProgress={
+          (isSkyworkMode ? skyworkLoadingState : loadingState).showProgress
+        }
+        duration={(isSkyworkMode ? skyworkLoadingState : loadingState).duration}
       />
 
       <OutlineStandardHeader
         title={isTemplateStage ? "Select Template" : "Outline Generation"}
         onBack={() => {
-          if (isTemplateStage) {
+          if (isTemplateStage || isSkyworkMode) {
             router.push("/dashboard");
             return;
           }
@@ -483,10 +548,10 @@ const OutlinePage: React.FC = () => {
           <div className="pointer-events-none fixed bottom-6 left-5 right-5 z-50 flex justify-center sm:left-10 sm:right-10 lg:left-0 lg:right-[369px]">
             <div className="pointer-events-auto">
               <GenerateButton
-                loadingState={loadingState}
+                loadingState={isSkyworkMode ? skyworkLoadingState : loadingState}
                 streamState={streamState}
                 selectedTemplateId={selectedTemplateId}
-                onSubmit={handleSubmit}
+                onSubmit={isSkyworkMode ? handleSkyworkSubmit : handleSubmit}
               />
             </div>
           </div>
