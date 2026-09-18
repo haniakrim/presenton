@@ -96,8 +96,12 @@ const SlideThumbnailCardComponent = forwardRef<
               style={{
                 width: 1280,
                 height: 720,
-                transformOrigin: "top left",
-                transform: `scale(${SCALE})`,
+                // `zoom` reflows and rerenders text natively at the target
+                // size; `transform: scale()` renders at full size first and
+                // bitmap-downsamples, which washes out thinner body text
+                // while bold headings survive (confirmed live: headings
+                // stayed crisp, body text went near-invisible-gray).
+                zoom: SCALE,
               }}
             >
               <SmartHtmlSlide
@@ -113,8 +117,7 @@ const SlideThumbnailCardComponent = forwardRef<
               style={{
                 width: 1280,
                 height: 720,
-                transformOrigin: "top left",
-                transform: `scale(${SCALE})`,
+                zoom: SCALE,
               }}
             >
               <TemplateV2HtmlSlidePreview
@@ -130,8 +133,7 @@ const SlideThumbnailCardComponent = forwardRef<
               style={{
                 width: 1280,
                 height: 720,
-                transformOrigin: "top left",
-                transform: `scale(${SCALE})`,
+                zoom: SCALE,
               }}
             >
               <V1ContentRender
