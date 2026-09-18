@@ -307,6 +307,13 @@ const OutlinePage: React.FC = () => {
         template_id: selectedTemplateId,
       });
       setIsTemplateStage(false);
+
+      // presentation_id above reads queryPresentationId first, so without
+      // this the URL keeps pointing at the old (now-orphaned) presentation
+      // and useOutlineStreaming never streams the freshly created one.
+      const nextParams = new URLSearchParams(searchParams.toString());
+      nextParams.set("id", createResponse.id);
+      router.replace(`/outline?${nextParams.toString()}`);
     } catch (error: unknown) {
       console.error("Error regenerating outline", error);
       trackEvent(MixpanelEvent.TemplateV2_Outline_Regeneration_Failed, {
@@ -335,6 +342,8 @@ const OutlinePage: React.FC = () => {
     isOutlineReady,
     outlineControlsBusy,
     presentation_id,
+    router,
+    searchParams,
     selectedTemplateId,
   ]);
 
