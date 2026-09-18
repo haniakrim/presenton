@@ -11,6 +11,7 @@ export interface PresentationResponse {
   version?: PresentationVersion;
   generation_mode?: "standard" | "smart";
   type?: "standard" | "smart";
+  source?: string | null;
   title: string;
   created_at: string;
   updated_at: string;

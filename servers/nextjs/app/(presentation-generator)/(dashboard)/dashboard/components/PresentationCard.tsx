@@ -54,6 +54,8 @@ export const PresentationCard = ({
     presentation?.type === "smart" || presentation?.generation_mode === "smart"
       ? "smart"
       : "standard";
+  const isSkywork = presentation?.source === "skywork";
+  const presentationBadgeLabel = isSkywork ? "skywork" : presentationType;
 
   const handlePreview = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -177,12 +179,14 @@ export const PresentationCard = ({
         </div>
         <p
           className={`absolute left-2 top-2 z-40 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize shadow-sm backdrop-blur-sm ${
-            presentationType === "smart"
+            isSkywork
+              ? "bg-[#ECFDF3]/95 text-[#027A48]"
+              : presentationType === "smart"
               ? "bg-[#F4F0FF]/95 text-[#6941C6]"
               : "bg-white/90 text-[#475467]"
           }`}
         >
-          {presentationType}
+          {presentationBadgeLabel}
         </p>
         <p className="absolute right-2 top-2 z-40 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-[#191919] shadow-sm backdrop-blur-sm">
           {presentation.n_slides ?? presentation?.slides?.length ?? 0}

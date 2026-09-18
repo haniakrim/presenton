@@ -213,6 +213,7 @@ async def _run_skywork_task(
                         language=language,
                         title=query[:120] or "Skywork Presentation",
                         generation_mode="smart",
+                        source="skywork",
                         fonts={"Inter": "/vendor/fonts/sans_serif/inter/Inter[opsz,wght].ttf"},
                     )
                     sql_session.add(presentation)

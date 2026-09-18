@@ -79,6 +79,13 @@ class PresentationModel(SQLModel, table=True):
     community_design_ids: Optional[List[int]] = Field(
         sa_column=Column(JSON), default=None
     )
+    # Origin marker for presentations built from an external generator that
+    # still stores as generation_mode="smart" for rendering/routing (e.g.
+    # Skywork). Purely cosmetic - never branched on for rendering/routing,
+    # only for dashboard badge labeling.
+    source: Optional[str] = Field(
+        sa_column=Column(String, nullable=True), default=None
+    )
 
     def get_new_presentation(self):
         return PresentationModel(
@@ -103,6 +110,7 @@ class PresentationModel(SQLModel, table=True):
             fonts=copy.deepcopy(self.fonts),
             generation_mode=self.generation_mode,
             community_design_ids=copy.deepcopy(self.community_design_ids),
+            source=self.source,
         )
 
     def get_presentation_outline(self):
