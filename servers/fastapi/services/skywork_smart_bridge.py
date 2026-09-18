@@ -1,35 +1,41 @@
 """Bridges a Skywork-generated .pptx into Forge's Smart-mode editor.
 
-Skywork returns a finished, pixel-positioned .pptx. Forge's Smart editor
-requires per-slide HTML matching a strict contract: a `<section class="relative
-h-[720px] w-[1280px] overflow-hidden">` root, no scrolling/clipping utilities,
-and (via `inspect_smart_slide_layout`) no overlapping/off-canvas absolutely
-positioned "meaningful" (text/media) elements.
+Skywork returns a finished, pixel-positioned .pptx and already designed it
+correctly - the goal here is to preserve that design faithfully as editable
+Smart-mode HTML, not to re-validate it as if it were fresh LLM output.
+Forge's own Smart-mode *generation* path runs new slides through
+`normalize_smart_slide_html` (security sanitization) AND
+`_validate_smart_slide_layout_safety` (word-count limits, overlap/off-canvas
+detection) - the second half exists to catch a generative model hallucinating
+bad layouts, and rejects plenty of real, correct, content-dense designs
+(exactly the kind Skywork produces) along with it. We apply the same
+security sanitization but skip the content-quality gate entirely, so a slide
+Skywork designed well keeps its real layout instead of degrading to a
+flattened image over word-count or overlap heuristics tuned for a different
+content source.
 
 `convert_pptx_to_html()` (export_task_service.py) renders each slide as a
 single absolutely-positioned `<div>` tree with inline pixel styles — a
-different but *compatible* layout model (the Smart validator's geometry
-checks parse inline `style` positioning, not just Tailwind classes). The two
-real gaps are: (1) the wrapper isn't a `<section>` with the required classes,
-and (2) purely decorative shapes (background rectangles, accent bars) that
-happen to sit behind text trip the overlap check, which has no auto-fix.
+different but *compatible* layout model (Smart mode's own generation also
+uses inline-styled absolute positioning). The two real gaps are: (1) the
+wrapper isn't a `<section>` with the required classes, and (2) the required
+classes need to be literally present for `SmartHtmlEditor`'s own downstream
+assumptions.
 
 Strategy per slide:
 1. Extract the single root `<div>` PowerPoint's renderer emits, rewrap it as
    a Smart-compliant `<section>`.
 2. Tag content-free (svg/shape-only, no visible text) top-level children
-   `aria-hidden="true"` so the layout inspector skips them — this resolves
-   the overwhelming majority of real "background shape overlaps text"
-   rejections, since inspect_smart_slide_layout only checks "meaningful"
-   (text/media) nodes and explicitly skips aria-hidden ones.
-3. Run the result through Forge's own `normalize_smart_slide_html` /
-   `_slide_from_html` — the exact validator local Smart generation uses, so
-   there is no drift between the two code paths.
-4. If a slide still fails (dense text, genuine overlapping content, etc. —
-   no auto-fix exists for these), fall back to rendering that single slide's
-   original HTML to a flat image via the same export runtime and wrapping it
-   in the minimal valid Smart-HTML shell. The deck never fails outright;
-   individual slides degrade from editable to image-only.
+   `aria-hidden="true"` - correct accessibility practice regardless (it does
+   not hide them visually), kept for that reason alone now.
+3. Apply the same security sanitization Forge's own Smart-mode generation
+   applies (strip unsafe document tags, inline scripts, event-handler
+   attributes, javascript: URLs) without running the generative-output
+   content-quality validator.
+4. Only if a slide's root `<div>` genuinely can't be located (malformed
+   export, not a content-quality judgment call) does it fall back to
+   rendering that single slide's original HTML to a flat image via the same
+   export runtime. The deck never fails outright.
 """
 from __future__ import annotations
 
@@ -40,14 +46,19 @@ import shutil
 import uuid
 from typing import Optional
 
-from fastapi import HTTPException
-
 from services.export_task_service import EXPORT_TASK_SERVICE, PptxToHtmlDocument
 from utils.asset_directory_utils import (
     filesystem_image_path_to_app_data_url,
     get_images_directory,
 )
-from utils.llm_calls.generate_smart_presentation import _slide_from_html
+from utils.llm_calls.generate_smart_presentation import (
+    _EVENT_HANDLER_ATTRIBUTE,
+    _JAVASCRIPT_URL,
+    _sanitize_script,
+    _SCRIPT_TAG,
+    _slide_from_html,
+    _UNSAFE_DOCUMENT_TAGS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +218,25 @@ def _transpile_slide(raw_slide_html: str, asset_root: str) -> Optional[str]:
     return _rehost_referenced_assets(section, asset_root)
 
 
+def _sanitized_smart_slide(html: str, index: int) -> dict[str, str]:
+    """Build a Smart-mode slide dict, applying only Forge's security
+    sanitization - not the generative-content-quality gate (word-count
+    limits, overlap detection) that `_slide_from_html` also enforces. The
+    HTML here is already a real, correct design (Skywork's), not LLM output
+    that needs constraining.
+    """
+    html = _UNSAFE_DOCUMENT_TAGS.sub("", html)
+    html = _SCRIPT_TAG.sub(_sanitize_script, html)
+    html = _EVENT_HANDLER_ATTRIBUTE.sub("", html)
+    html = _JAVASCRIPT_URL.sub("", html)
+    return {
+        "title": f"Slide {index + 1}",
+        "html": html,
+        "speaker_note": "",
+        "slide_type": "content",
+    }
+
+
 async def _image_fallback_slide(raw_slide_html: str, index: int) -> dict[str, str]:
     result = await EXPORT_TASK_SERVICE.render_html_to_image(raw_slide_html, 1280, 720)
     image_url = _rehost_asset(result.path)
@@ -231,31 +261,28 @@ async def _image_fallback_slide(raw_slide_html: str, index: int) -> dict[str, st
 
 
 async def build_smart_slides(pptx_path: str) -> list[dict[str, str]]:
-    """Convert a .pptx into Smart-mode-compliant slides, one per source slide.
+    """Convert a .pptx into Smart-mode slides, one per source slide,
+    preserving Skywork's real design as editable HTML.
 
-    Each slide is attempted as fully editable HTML first; any slide that
-    fails Smart mode's own validator falls back to a flattened image so the
-    whole deck never fails outright.
+    Only a genuine extraction failure (the slide's root `<div>` can't be
+    located at all) falls back to a flattened image; the deck never fails
+    outright.
     """
     document: PptxToHtmlDocument = await EXPORT_TASK_SERVICE.convert_pptx_to_html(pptx_path)
     asset_root = os.path.dirname(document.images_dir)
 
     slides: list[dict[str, str]] = []
     for index, raw_slide_html in enumerate(document.slides):
-        try:
-            transpiled = _transpile_slide(raw_slide_html, asset_root)
-            if transpiled is None:
-                raise ValueError("could not locate the slide's root element")
-            slides.append(_slide_from_html(transpiled, index))
+        transpiled = _transpile_slide(raw_slide_html, asset_root)
+        if transpiled is not None:
+            slides.append(_sanitized_smart_slide(transpiled, index))
             continue
-        except (HTTPException, ValueError) as exc:
-            logger.info(
-                "[skywork_smart_bridge] slide %d failed Smart validation (%s); "
-                "falling back to a flattened image",
-                index,
-                exc,
-            )
 
+        logger.info(
+            "[skywork_smart_bridge] slide %d's root element could not be "
+            "located; falling back to a flattened image",
+            index,
+        )
         try:
             slides.append(await _image_fallback_slide(raw_slide_html, index))
         except Exception:

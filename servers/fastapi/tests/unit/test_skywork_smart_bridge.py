@@ -8,12 +8,12 @@ from services.skywork_smart_bridge import (
     _extract_root,
     _has_visible_text,
     _rehost_referenced_assets,
+    _sanitized_smart_slide,
     _split_top_level_children,
     _tag_decorative,
     _transpile_slide,
     build_smart_slides,
 )
-from utils.llm_calls.generate_smart_presentation import _slide_from_html
 
 REAL_SAMPLE_SLIDE_HTML = (
     '<!doctype html><html><head><meta charset="utf-8"><style>'
@@ -67,24 +67,44 @@ def test_extract_root_returns_none_for_unrecognized_shape():
     assert _extract_root("<html><body><p>no root div</p></body></html>") is None
 
 
-def test_transpile_slide_produces_a_smart_html_validator_passing_section():
+def test_transpile_slide_produces_a_well_formed_section():
     transpiled = _transpile_slide(REAL_SAMPLE_SLIDE_HTML, "/nonexistent")
     assert transpiled is not None
     assert transpiled.startswith(
         '<section class="relative h-[720px] w-[1280px] overflow-hidden"'
     )
     assert transpiled.rstrip().endswith("</section>")
-    # the background shape (svg-only, no text) must be tagged decorative so it
-    # doesn't collide with the overlapping "Shape" text label on top of it
+    # the background shape (svg-only, no text) is tagged decorative for
+    # accessibility - it does not affect visual rendering, and overlapping
+    # "meaningful" content (the "Shape" text label on top of it) is no
+    # longer rejected: Skywork's own design is trusted, not re-validated as
+    # if it were fresh LLM output.
     assert '<div aria-hidden="true" style=' in transpiled
 
-    # must pass Forge's own Smart-mode validator unmodified
-    slide = _slide_from_html(transpiled, 0)
+    # security sanitization still applies; content-quality validation does not
+    slide = _sanitized_smart_slide(transpiled, 0)
     assert slide["html"] == transpiled
+    assert slide["title"] == "Slide 1"
 
 
 def test_transpile_slide_returns_none_when_root_cannot_be_found():
     assert _transpile_slide("<html><body><p>x</p></body></html>", "/nonexistent") is None
+
+
+def test_sanitized_smart_slide_strips_unsafe_content():
+    html = (
+        '<section class="relative h-[720px] w-[1280px] overflow-hidden">'
+        '<script>alert(1)</script>'
+        '<div onclick="alert(2)">hi</div>'
+        '<a href="javascript:alert(3)">click</a>'
+        "</section>"
+    )
+    slide = _sanitized_smart_slide(html, 2)
+    assert "<script>" not in slide["html"]
+    assert "onclick" not in slide["html"]
+    assert "javascript:" not in slide["html"]
+    assert slide["title"] == "Slide 3"
+    assert slide["slide_type"] == "content"
 
 
 def test_rehost_referenced_assets_resolves_manifest_relative_paths(tmp_path):
