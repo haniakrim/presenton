@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { trackEvent, MixpanelEvent } from "@/utils/mixpanel";
 import { ArrowLeft } from "lucide-react";
-import { ForgeMark } from "@/components/ForgeLogo";
+import { ForgeWordmark } from "@/components/ForgeLogo";
 
 const PATHS_WITH_HEADER_BACK = [
   "/upload",
@@ -45,7 +45,7 @@ const Header = () => {
         <div className="flex items-center justify-between py-1">
           <div className="flex items-center gap-3">
             <Link href="/dashboard" onClick={() => trackEvent(MixpanelEvent.Navigation, { from: pathname, to: "/dashboard" })}>
-              <ForgeMark className="h-[40px] w-[40px]" />
+              <ForgeWordmark className="text-[28px]" />
             </Link>
           </div>
           <div className="flex items-center">

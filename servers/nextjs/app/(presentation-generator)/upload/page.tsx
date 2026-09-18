@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import { normalizePresentationGenerationMode } from "@/utils/presentationGenerationMode";
 
 export const metadata: Metadata = {
-  title: "Forge | Open Source AI presentation generator",
+  title: "Forge | AI presentation generator",
   description:
     "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
   alternates: {

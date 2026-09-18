@@ -60,8 +60,8 @@ export default function GenerationModeDialog({
             </div>
 
         <div className="p-3 sm:p-5">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-stretch">
+            <div className="flex flex-col">
               <div className="pb-2.5">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-[18px] border border-[#EDEEEF] bg-white">
                   <video
@@ -74,20 +74,20 @@ export default function GenerationModeDialog({
                   />
                 </div>
               </div>
-              <div className="rounded-[20px] border border-[#EBE9FE] bg-[#F4F3FF] px-3.5 pb-5 pt-3.5">
+              <div className="flex flex-1 flex-col rounded-[20px] border border-[#EBE9FE] bg-[#F4F3FF] px-3.5 pb-5 pt-3.5">
                 <div className="flex items-center justify-between border-b border-[#EBE9FE] pb-3.5">
                   <p className="text-xl font-medium text-[#333333]">Standard</p>
                   <p className="text-[10px] font-medium text-[#6938EF]">
                     Fixed layout
                   </p>
                 </div>
-                <p className="mb-2 py-1.5 text-base font-medium text-[#666666]">
+                <p className="mb-2 flex-1 py-1.5 text-base font-medium text-[#666666]">
                   A rigid, predefined layout with fixed structure, ensuring
                   consistency, clarity, and predictable results.
                 </p>
                 <Button
                   type="button"
-                  className="rounded-[80px] bg-[#7A5AF8] px-5 text-base font-medium text-white shadow-none hover:bg-[#6938EF]/90"
+                  className="mt-auto rounded-[80px] bg-[#7A5AF8] px-5 text-base font-medium text-white shadow-none hover:bg-[#6938EF]/90"
                   onClick={() => selectMode("standard")}
                 >
                   Select Standard
@@ -95,7 +95,7 @@ export default function GenerationModeDialog({
               </div>
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <div className="pb-2.5">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-[18px] border border-[#EDEEEF] bg-white">
                   <video
@@ -108,20 +108,20 @@ export default function GenerationModeDialog({
                   />
                 </div>
               </div>
-              <div className="rounded-[20px] border border-[#EBE9FE] bg-[#F4F3FF] px-3.5 pb-5 pt-3.5">
+              <div className="flex flex-1 flex-col rounded-[20px] border border-[#EBE9FE] bg-[#F4F3FF] px-3.5 pb-5 pt-3.5">
                 <div className="flex items-center justify-between border-b border-[#EBE9FE] pb-3.5">
                   <p className="text-xl font-medium text-[#333333]">Smart</p>
                   <p className="text-[10px] font-medium text-[#6938EF]">
                     Flexible layout
                   </p>
                 </div>
-                <p className="mb-2 py-1.5 text-base font-medium text-[#666666]">
+                <p className="mb-2 flex-1 py-1.5 text-base font-medium text-[#666666]">
                   A smart adaptive layout with flexible structure, balancing
                   consistency and content.
                 </p>
                 <Button
                   type="button"
-                  className="h-auto min-h-10 rounded-[80px] px-5 text-base font-medium text-[#101323] shadow-none"
+                  className="mt-auto h-auto min-h-10 rounded-[80px] px-5 text-base font-medium text-[#101323] shadow-none"
                   style={{
                     background:
                       "linear-gradient(270deg, #D5CAFC 2.4%, #E3D2EB 27.88%, #F4DCD3 69.23%, #FDE4C2 100%)",
@@ -133,7 +133,7 @@ export default function GenerationModeDialog({
               </div>
             </div>
 
-            <div>
+            <div className="flex flex-col">
               <div className="pb-2.5">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-[18px] border border-[#EDEEEF] bg-white">
                   <video
@@ -146,21 +146,21 @@ export default function GenerationModeDialog({
                   />
                 </div>
               </div>
-              <div className="rounded-[20px] border border-[#EBE9FE] bg-[#F4F3FF] px-3.5 pb-5 pt-3.5">
+              <div className="flex flex-1 flex-col rounded-[20px] border border-[#EBE9FE] bg-[#F4F3FF] px-3.5 pb-5 pt-3.5">
                 <div className="flex items-center justify-between border-b border-[#EBE9FE] pb-3.5">
                   <p className="text-xl font-medium text-[#333333]">Skywork</p>
                   <p className="text-[10px] font-medium text-[#6938EF]">
                     External AI
                   </p>
                 </div>
-                <p className="mb-2 py-1.5 text-base font-medium text-[#666666]">
+                <p className="mb-2 flex-1 py-1.5 text-base font-medium text-[#666666]">
                   Generated by Skywork's hosted AI, opened in the built-in
                   editor when possible — otherwise delivered as a
                   downloadable file.
                 </p>
                 <Button
                   type="button"
-                  className="rounded-[80px] bg-[#101323] px-5 text-base font-medium text-white shadow-none hover:bg-[#101323]/90"
+                  className="mt-auto rounded-[80px] bg-[#101323] px-5 text-base font-medium text-white shadow-none hover:bg-[#101323]/90"
                   onClick={() => selectMode("skywork")}
                 >
                   Select Skywork

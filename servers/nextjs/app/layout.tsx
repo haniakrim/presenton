@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import TailwindBrowserRuntime from "@/components/runtime/TailwindBrowserRuntime";
 export const metadata: Metadata = {
   metadataBase: new URL("https://presenton.ai"),
-  title: "Forge - Open Source AI presentation generator",
+  title: "Forge - AI presentation generator",
   description:
     "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
   keywords: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     "professional slides",
   ],
   openGraph: {
-    title: "Forge - Open Source AI presentation generator",
+    title: "Forge - AI presentation generator",
     description:
       "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
     url: "https://presenton.ai",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Forge - Open Source AI presentation generator",
+    title: "Forge - AI presentation generator",
     description:
       "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
     images: ["https://presenton.ai/presenton-feature-graphics.png"],
